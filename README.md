@@ -283,3 +283,9 @@ jobs:
           registry: v2.4.1
           paths: exports/**/*.mp4
 ```
+
+## Deploy note
+
+Run #5's Pages deploy failed on GitHub's side (artifact fetch error),
+and re-running the failed job failed again (duplicate artifact). This
+commit re-triggers a fresh workflow run.
