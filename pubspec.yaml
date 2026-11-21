@@ -1,0 +1,40 @@
+name: frame_police
+description: Frame Police — a design-system linter for creative exports. A rule engine that checks designs and frames against a design system, reports violations with severity, and runs in CI with exit codes.
+publish_to: 'none'
+version: 0.1.0+1
+
+environment:
+  sdk: '>=3.6.0 <4.0.0'
+  flutter: '>=3.27.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+  # Report fingerprint (SHA-256) — the report is the record.
+  crypto: ^3.0.6
+  # .zip export of all local data (reports, rules, waivers) from Data controls.
+  archive: ^4.0.7
+  # SVG logo assets (icon, horizontal + stacked lockups, app-icon tile).
+  flutter_svg: ^2.0.10
+  # Inter + JetBrains Mono, matching the V7 design.
+  google_fonts: ^6.2.1
+  # Local-first persistence: reports, rules, waivers, settings, account.
+  shared_preferences: ^2.3.3
+  # Session token storage (the only secret v0.1 holds).
+  flutter_secure_storage: ^9.2.2
+  # Pick export files to inspect; save report exports (native + web).
+  file_picker: ^8.1.6
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^4.0.0
+
+flutter:
+  uses-material-design: true
+  assets:
+    - assets/logos/icon.svg
+    - assets/logos/icon-small.svg
+    - assets/logos/horizontal.svg
+    - assets/logos/stacked.svg
+    - assets/logos/app-icon.svg
