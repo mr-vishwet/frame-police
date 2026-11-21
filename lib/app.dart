@@ -92,27 +92,24 @@ class _FramePoliceAppState extends State<FramePoliceApp> {
 
   @override
   Widget build(BuildContext context) {
+    // ONE MaterialApp for the app's whole life. Swapping between two
+    // MaterialApps (a splash one with `home`, a main one without) crashes
+    // in release: the Navigator keeps the "/" route, whose builder is the
+    // framework closure `(context) => widget.home!` — after the swap
+    // `home` is null and that closure throws "Null check operator used on
+    // a null value" when the route rebuilds (deployed main.dart.js
+    // aFM.$1, line 84189). The loading gate lives INSIDE `home` instead,
+    // so `home` is never null. (The swap was doubly broken: `initialRoute`
+    // is only read when the Navigator is created, so the swapped-in
+    // MaterialApp's initialRoute was silently ignored and the app would
+    // have stayed on the splash even without the crash.)
     return AppScope(
       notifier: widget.controller,
-      child: AnimatedBuilder(
-        animation: widget.controller,
-        builder: (context, _) {
-          if (!widget.controller.initialized) {
-            return MaterialApp(
-              title: 'Frame Police',
-              theme: AppTheme.data,
-              home: const _SplashScreen(),
-            );
-          }
-          return MaterialApp(
-            title: 'Frame Police',
-            theme: AppTheme.data,
-            initialRoute: widget.controller.onboarded
-                ? AppRoutes.home
-                : AppRoutes.welcome,
-            onGenerateRoute: _onGenerateRoute,
-          );
-        },
+      child: MaterialApp(
+        title: 'Frame Police',
+        theme: AppTheme.data,
+        home: const _StartupGate(),
+        onGenerateRoute: _onGenerateRoute,
       ),
     );
   }
@@ -162,6 +159,28 @@ class _FramePoliceAppState extends State<FramePoliceApp> {
     AppRoutes.connected: ConnectedScreen.new,
     AppRoutes.data: DataControlsScreen.new,
   };
+}
+
+/// The "/" route's content: the splash while the store loads, then the
+/// first screen — Home for returning users, Welcome for first launch.
+/// Rebuilds on the controller (via [AnimatedBuilder]) so the switch
+/// happens the moment `init()` completes.
+class _StartupGate extends StatelessWidget {
+  const _StartupGate();
+
+  @override
+  Widget build(BuildContext context) {
+    final controller = AppScope.read(context);
+    return AnimatedBuilder(
+      animation: controller,
+      builder: (context, _) {
+        if (!controller.initialized) return const _SplashScreen();
+        return controller.onboarded
+            ? const HomeScreen()
+            : const WelcomeScreen();
+      },
+    );
+  }
 }
 
 /// Splash shown while the store loads (local JSON — fast).
