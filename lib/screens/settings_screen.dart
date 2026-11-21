@@ -5,7 +5,7 @@
 /// below. The account row leads to the account screens.
 library;
 
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 import '../core/constants.dart';
 import '../core/responsive.dart';
@@ -14,14 +14,16 @@ import '../state/app_controller.dart';
 import '../widgets/app_shell.dart';
 import '../widgets/fp_widgets.dart';
 
+/// The settings screen screen.
 class SettingsScreen extends StatelessWidget {
+  /// Creates a [SettingsScreen].
   const SettingsScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
     final controller = AppScope.of(context);
     final settings = controller.settings;
-    final p = AppTheme.palette;
+    const p = AppTheme.palette;
     final defectCount =
         controller.rules.where((r) => r.isDefect).length;
     return FpScaffold(
@@ -37,7 +39,7 @@ class SettingsScreen extends StatelessWidget {
                   'Settings',
                   style: Theme.of(context).textTheme.titleMedium,
                 ),
-                Tag(kRegistryVersion),
+                const Tag(kRegistryVersion),
               ],
             ),
             const SizedBox(height: 12),

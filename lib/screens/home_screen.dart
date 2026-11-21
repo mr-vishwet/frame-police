@@ -5,7 +5,7 @@
 /// chart sit side by side.
 library;
 
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 import '../core/constants.dart';
 import '../core/format.dart';
@@ -17,14 +17,16 @@ import '../widgets/fp_widgets.dart';
 import '../widgets/logo.dart';
 import '../widgets/score_bars.dart';
 
+/// The home screen screen.
 class HomeScreen extends StatelessWidget {
+  /// Creates a [HomeScreen].
   const HomeScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
     final controller = AppScope.of(context);
     final report = controller.currentReport;
-    final p = AppTheme.palette;
+    const p = AppTheme.palette;
     return FpScaffold(
       tabIndex: 0,
       body: FpScrollBody(
@@ -112,7 +114,7 @@ class HomeScreen extends StatelessWidget {
     AppController controller,
   ) {
     final report = controller.currentReport;
-    final p = AppTheme.palette;
+    const p = AppTheme.palette;
     if (report == null) {
       return const FpEmptyState(
         icon: Icons.document_scanner_outlined,

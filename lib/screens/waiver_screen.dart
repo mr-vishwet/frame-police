@@ -5,7 +5,7 @@
 /// defect sits beside the reason field.
 library;
 
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 import '../core/constants.dart';
 import '../core/responsive.dart';
@@ -21,7 +21,9 @@ const List<String> _waiverTags = [
   'False positive',
 ];
 
+/// The waiver screen screen.
 class WaiverScreen extends StatefulWidget {
+  /// Creates a [WaiverScreen].
   const WaiverScreen({super.key});
 
   @override
@@ -49,7 +51,7 @@ class _WaiverScreenState extends State<WaiverScreen> {
     final report = reportId == null
         ? controller.currentReport
         : controller.reportById(reportId) ?? controller.currentReport;
-    final p = AppTheme.palette;
+    const p = AppTheme.palette;
     Finding? finding;
     if (report != null && findingId != null) {
       for (final f in report.defects) {

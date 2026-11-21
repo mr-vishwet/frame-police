@@ -5,7 +5,7 @@
 /// the merge status.
 library;
 
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 import '../core/constants.dart';
 import '../core/responsive.dart';
@@ -16,7 +16,9 @@ import '../widgets/app_shell.dart';
 import '../widgets/fp_widgets.dart';
 import '../widgets/logo.dart';
 
+/// The pr comment screen screen.
 class PrCommentScreen extends StatelessWidget {
+  /// Creates a [PrCommentScreen].
   const PrCommentScreen({super.key});
 
   @override
@@ -28,7 +30,7 @@ class PrCommentScreen extends StatelessWidget {
     final run = ciRunId == null
         ? (controller.ciRuns.isEmpty ? null : controller.ciRuns.first)
         : controller.ciRunById(ciRunId);
-    final p = AppTheme.palette;
+    const p = AppTheme.palette;
     if (run == null) {
       return const FpScaffold(
         title: 'PR',
@@ -259,7 +261,7 @@ class PrCommentScreen extends StatelessWidget {
   List<Finding> _demoDefects(CiRun run) {
     if (run.passed) return const [];
     return [
-      Finding(
+      const Finding(
         id: kRuleSubtitleSafeArea,
         ruleCode: kRuleSubtitleSafeArea,
         ruleVersion: 'v1.2',
@@ -272,7 +274,7 @@ class PrCommentScreen extends StatelessWidget {
         limitValue: DemoFixture.subtitleLimitY,
         detail: 'Subtitle bottom edge below the safe-area line.',
       ),
-      Finding(
+      const Finding(
         id: kRuleAudioPeak,
         ruleCode: kRuleAudioPeak,
         ruleVersion: 'v2.0',

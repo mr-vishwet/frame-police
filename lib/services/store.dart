@@ -12,6 +12,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import '../engine/models.dart';
 
+/// Local store.
 class LocalStore {
   static const _exportsKey = 'fp.exports.v1';
   static const _reportsKey = 'fp.reports.v1';
@@ -27,6 +28,7 @@ class LocalStore {
 
   // -- exports ----------------------------------------------------------
 
+  /// Loads the exports.
   Future<List<ExportFile>?> loadExports() async {
     final raw = (await _prefs()).getString(_exportsKey);
     if (raw == null) return null;
@@ -36,6 +38,7 @@ class LocalStore {
         .toList();
   }
 
+  /// Saves the exports.
   Future<void> saveExports(List<ExportFile> exports) async {
     final raw = jsonEncode(exports.map((e) => e.toJson()).toList());
     await (await _prefs()).setString(_exportsKey, raw);
@@ -43,6 +46,7 @@ class LocalStore {
 
   // -- reports ----------------------------------------------------------
 
+  /// Loads the reports.
   Future<List<Report>?> loadReports() async {
     final raw = (await _prefs()).getString(_reportsKey);
     if (raw == null) return null;
@@ -52,6 +56,7 @@ class LocalStore {
         .toList();
   }
 
+  /// Saves the reports.
   Future<void> saveReports(List<Report> reports) async {
     final raw = jsonEncode(reports.map((r) => r.toJson()).toList());
     await (await _prefs()).setString(_reportsKey, raw);
@@ -59,6 +64,7 @@ class LocalStore {
 
   // -- rules ------------------------------------------------------------
 
+  /// Loads the rules.
   Future<List<Rule>?> loadRules() async {
     final raw = (await _prefs()).getString(_rulesKey);
     if (raw == null) return null;
@@ -68,6 +74,7 @@ class LocalStore {
         .toList();
   }
 
+  /// Saves the rules.
   Future<void> saveRules(List<Rule> rules) async {
     final raw = jsonEncode(rules.map((r) => r.toJson()).toList());
     await (await _prefs()).setString(_rulesKey, raw);
@@ -75,12 +82,14 @@ class LocalStore {
 
   // -- settings ---------------------------------------------------------
 
+  /// Loads the settings.
   Future<AppSettings?> loadSettings() async {
     final raw = (await _prefs()).getString(_settingsKey);
     if (raw == null) return null;
     return AppSettings.fromJson(jsonDecode(raw) as Map<String, dynamic>);
   }
 
+  /// Saves the settings.
   Future<void> saveSettings(AppSettings settings) async {
     await (await _prefs())
         .setString(_settingsKey, jsonEncode(settings.toJson()));
@@ -88,12 +97,14 @@ class LocalStore {
 
   // -- account ----------------------------------------------------------
 
+  /// Loads the account.
   Future<Account?> loadAccount() async {
     final raw = (await _prefs()).getString(_accountKey);
     if (raw == null) return null;
     return Account.fromJson(jsonDecode(raw) as Map<String, dynamic>);
   }
 
+  /// Saves the account.
   Future<void> saveAccount(Account? account) async {
     final prefs = await _prefs();
     if (account == null) {
@@ -105,6 +116,7 @@ class LocalStore {
 
   // -- CI runs + totals -------------------------------------------------
 
+  /// Loads the CI runs.
   Future<List<CiRun>?> loadCiRuns() async {
     final raw = (await _prefs()).getString(_ciRunsKey);
     if (raw == null) return null;
@@ -114,6 +126,7 @@ class LocalStore {
         .toList();
   }
 
+  /// Saves the CI runs.
   Future<void> saveCiRuns(List<CiRun> runs) async {
     final raw = jsonEncode(runs.map((r) => r.toJson()).toList());
     await (await _prefs()).setString(_ciRunsKey, raw);
@@ -127,6 +140,7 @@ class LocalStore {
     return list.map((e) => e as int).toList();
   }
 
+  /// Saves the CI totals.
   Future<void> saveCiTotals(List<int> totals) async {
     await (await _prefs()).setString(_ciTotalsKey, jsonEncode(totals));
   }
@@ -144,21 +158,26 @@ class LocalStore {
     return [list[0] as int, list[1] as int];
   }
 
+  /// Saves the counters.
   Future<void> saveCounters(List<int> counters) async {
     await (await _prefs()).setString(_countersKey, jsonEncode(counters));
   }
 
   // -- flags ------------------------------------------------------------
 
+  /// Whether the user is onboarded.
   Future<bool> isOnboarded() async =>
       (await _prefs()).getBool(_onboardedKey) ?? false;
 
+  /// Sets whether the user is onboarded.
   Future<void> setOnboarded(bool value) async =>
       (await _prefs()).setBool(_onboardedKey, value);
 
+  /// Whether the store is seeded.
   Future<bool> isSeeded() async =>
       (await _prefs()).getBool(_seededKey) ?? false;
 
+  /// Sets whether the store is seeded.
   Future<void> setSeeded(bool value) async =>
       (await _prefs()).setBool(_seededKey, value);
 

@@ -5,7 +5,7 @@
 /// export's detail sits beside the list.
 library;
 
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 import '../core/constants.dart';
 import '../core/format.dart';
@@ -16,7 +16,9 @@ import '../state/app_controller.dart';
 import '../widgets/app_shell.dart';
 import '../widgets/fp_widgets.dart';
 
+/// The inspect entry screen screen.
 class InspectEntryScreen extends StatefulWidget {
+  /// Creates an [InspectEntryScreen].
   const InspectEntryScreen({super.key});
 
   @override
@@ -29,7 +31,7 @@ class _InspectEntryScreenState extends State<InspectEntryScreen> {
   @override
   Widget build(BuildContext context) {
     final controller = AppScope.of(context);
-    final p = AppTheme.palette;
+    const p = AppTheme.palette;
     final query = _query.toLowerCase();
     final visible = controller.exports
         .where((e) => e.name.toLowerCase().contains(query))
@@ -38,7 +40,7 @@ class _InspectEntryScreenState extends State<InspectEntryScreen> {
     return FpScaffold(
       tabIndex: 1,
       title: 'Inspect',
-      actions: [Center(child: Tag(kRegistryVersion))],
+      actions: const [Center(child: Tag(kRegistryVersion))],
       body: FpScrollBody(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -68,19 +70,30 @@ class _InspectEntryScreenState extends State<InspectEntryScreen> {
               left: GlassCard(
                 padding:
                     const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Kicker('Recent exports'),
-                    const SizedBox(height: 6),
-                    if (visible.isEmpty)
-                      const Padding(
-                        padding: EdgeInsets.symmetric(vertical: 12),
-                        child: Text('No exports match that search.'),
-                      ),
-                    for (final export in visible)
-                      _fileRow(context, controller, export),
-                  ],
+                child: RadioGroup<String>(
+                  groupValue: selected?.id,
+                  onChanged: (id) {
+                    for (final export in visible) {
+                      if (export.id == id) {
+                        controller.selectExport(export);
+                        break;
+                      }
+                    }
+                  },
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Kicker('Recent exports'),
+                      const SizedBox(height: 6),
+                      if (visible.isEmpty)
+                        const Padding(
+                          padding: EdgeInsets.symmetric(vertical: 12),
+                          child: Text('No exports match that search.'),
+                        ),
+                      for (final export in visible)
+                        _fileRow(context, controller, export),
+                    ],
+                  ),
                 ),
               ),
               right: Column(
@@ -131,7 +144,7 @@ class _InspectEntryScreenState extends State<InspectEntryScreen> {
     AppController controller,
     ExportFile export,
   ) {
-    final p = AppTheme.palette;
+    const p = AppTheme.palette;
     final isKnownBad = export.id == 'exp_known_bad';
     return InkWell(
       onTap: () => controller.selectExport(export),
@@ -147,8 +160,6 @@ class _InspectEntryScreenState extends State<InspectEntryScreen> {
           children: [
             Radio<String>(
               value: export.id,
-              groupValue: controller.selectedExport?.id,
-              onChanged: (_) => controller.selectExport(export),
               activeColor: p.amber,
             ),
             Expanded(
@@ -194,7 +205,7 @@ class _InspectEntryScreenState extends State<InspectEntryScreen> {
   }
 
   Widget _detailCard(BuildContext context, ExportFile export) {
-    final p = AppTheme.palette;
+    const p = AppTheme.palette;
     return GlassCard(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -216,9 +227,9 @@ class _InspectEntryScreenState extends State<InspectEntryScreen> {
           const SizedBox(height: 8),
           Row(
             children: [
-              Tag('Registry $kRegistryVersion'),
+              const Tag('Registry $kRegistryVersion'),
               const SizedBox(width: 8),
-              Tag('${export.probe.isDemoProbe ? 'DEMO probe' : 'Measured probe'}',
+              Tag(export.probe.isDemoProbe ? 'DEMO probe' : 'Measured probe',
                   color: export.probe.isDemoProbe ? p.muted : p.green),
             ],
           ),

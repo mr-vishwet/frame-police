@@ -4,7 +4,7 @@
 /// tap a rule for its detail. On web the rules lay out in two columns.
 library;
 
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 import '../core/constants.dart';
 import '../core/responsive.dart';
@@ -16,7 +16,9 @@ import '../widgets/fp_widgets.dart';
 
 enum _Filter { all, defects, suggestions }
 
+/// The registry screen screen.
 class RegistryScreen extends StatefulWidget {
+  /// Creates a [RegistryScreen].
   const RegistryScreen({super.key});
 
   @override
@@ -30,7 +32,7 @@ class _RegistryScreenState extends State<RegistryScreen> {
   @override
   Widget build(BuildContext context) {
     final controller = AppScope.of(context);
-    final p = AppTheme.palette;
+    const p = AppTheme.palette;
     final query = _query.toLowerCase();
     final visible = controller.rules.where((rule) {
       if (_filter == _Filter.defects && !rule.isDefect) return false;
@@ -56,7 +58,7 @@ class _RegistryScreenState extends State<RegistryScreen> {
                   'Rule registry',
                   style: Theme.of(context).textTheme.titleMedium,
                 ),
-                Tag(kRegistryVersion),
+                const Tag(kRegistryVersion),
               ],
             ),
             const SizedBox(height: 12),
@@ -165,7 +167,7 @@ class _RegistryScreenState extends State<RegistryScreen> {
   }
 
   Widget _ruleRow(BuildContext context, Rule rule) {
-    final p = AppTheme.palette;
+    const p = AppTheme.palette;
     return FpRow(
       title: rule.name,
       subtitle: '${rule.code} · rule ${rule.version}',
@@ -193,7 +195,7 @@ class _RegistryScreenState extends State<RegistryScreen> {
   }
 
   Widget _ruleCard(BuildContext context, Rule rule) {
-    final p = AppTheme.palette;
+    const p = AppTheme.palette;
     return GlassCard(
       child: InkWell(
         onTap: () => Navigator.pushNamed(

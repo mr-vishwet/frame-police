@@ -4,14 +4,16 @@
 /// trap door. Deleting the account never deletes local reports.
 library;
 
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 import '../core/theme.dart';
 import '../state/app_controller.dart';
 import '../widgets/app_shell.dart';
 import '../widgets/fp_widgets.dart';
 
+/// The data controls screen screen.
 class DataControlsScreen extends StatefulWidget {
+  /// Creates a [DataControlsScreen].
   const DataControlsScreen({super.key});
 
   @override
@@ -24,7 +26,7 @@ class _DataControlsScreenState extends State<DataControlsScreen> {
   @override
   Widget build(BuildContext context) {
     final controller = AppScope.of(context);
-    final p = AppTheme.palette;
+    const p = AppTheme.palette;
     return FpScaffold(
       title: 'Data controls',
       showBack: true,

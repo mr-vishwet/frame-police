@@ -12,7 +12,6 @@ library;
 
 import 'dart:async';
 
-import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
 
 import '../core/constants.dart';
@@ -27,13 +26,41 @@ import '../services/secure_session.dart';
 import '../services/store.dart';
 
 /// Phase of the inspection runner.
-enum InspectionPhase { idle, running, done, error }
+enum InspectionPhase {
+  /// No inspection running.
+  idle,
+
+  /// An inspection is running.
+  running,
+
+  /// The inspection finished.
+  done,
+
+  /// The inspection failed.
+  error,
+}
 
 /// Per-probe state shown on the Inspecting screen.
-enum ProbeState { queued, running, pass, defect, suggestion }
+enum ProbeState {
+  /// Waiting to run.
+  queued,
+
+  /// Running now.
+  running,
+
+  /// Passed.
+  pass,
+
+  /// Found a defect.
+  defect,
+
+  /// Found a suggestion.
+  suggestion,
+}
 
 /// One probe row in the live inspection list.
 class ProbeProgress {
+  /// Creates a [ProbeProgress].
   const ProbeProgress({
     required this.ruleCode,
     required this.label,
@@ -41,11 +68,16 @@ class ProbeProgress {
     this.detail = '',
   });
 
+  /// The rule code.
   final String ruleCode;
+  /// The label.
   final String label;
+  /// The state.
   final ProbeState state;
+  /// The detail.
   final String detail;
 
+  /// Returns a copy of this with the given fields replaced.
   ProbeProgress copyWith({ProbeState? state, String? detail}) =>
       ProbeProgress(
         ruleCode: ruleCode,
@@ -57,6 +89,7 @@ class ProbeProgress {
 
 /// Counts shown on the migration screen (computed from the real store).
 class MigrationSummary {
+  /// Creates a [MigrationSummary].
   const MigrationSummary({
     required this.reports,
     required this.rules,
@@ -64,15 +97,22 @@ class MigrationSummary {
     required this.defectsCaught,
   });
 
+  /// The reports.
   final int reports;
+  /// The rules.
   final int rules;
+  /// The waivers.
   final int waivers;
+  /// The defects caught.
   final int defectsCaught;
 
+  /// The total.
   int get total => reports + rules + waivers;
 }
 
+/// App controller.
 class AppController extends ChangeNotifier {
+  /// Creates an [AppController].
   AppController({
     LocalStore? store,
     SecureSession? session,
@@ -89,38 +129,58 @@ class AppController extends ChangeNotifier {
   final ReportExportService _exporter;
 
   bool _initialized = false;
+  /// Whether initialization has finished.
   bool get initialized => _initialized;
 
   // -- core state -------------------------------------------------------
 
+  /// The exports.
   List<ExportFile> exports = [];
+  /// The selected export.
   ExportFile? selectedExport;
+  /// The reports.
   List<Report> reports = [];
+  /// The current report.
   Report? currentReport;
+  /// The rules.
   List<Rule> rules = [];
+  /// The settings.
   AppSettings settings = const AppSettings();
+  /// The account.
   Account? account;
   Account? _pendingAccount;
+  /// The ci runs.
   List<CiRun> ciRuns = [];
+  /// The ci totals.
   List<int> ciTotals = const [
     DemoFixture.ciTotalRuns,
     DemoFixture.ciFailedRuns,
     DemoFixture.ciCleanRuns,
   ];
+  /// Whether the user has finished onboarding.
   bool onboarded = false;
+  /// The defects caught.
   int defectsCaught = DemoFixture.defectsCaught;
+  /// The zero defect exports.
   int zeroDefectExports = DemoFixture.zeroDefectExports;
 
   // -- inspection runner state ------------------------------------------
 
+  /// The inspection phase.
   InspectionPhase inspectionPhase = InspectionPhase.idle;
+  /// The inspection progress.
   double inspectionProgress = 0;
+  /// The probe progress.
   List<ProbeProgress> probeProgress = [];
+  /// The frames probed.
   int framesProbed = 0;
+  /// The inspection error.
   String? inspectionError;
   bool _cancelRequested = false;
 
+  /// Whether the current user is a guest.
   bool get isGuest => account == null;
+  /// Whether this is signed in.
   bool get isSignedIn => account != null;
 
   /// Scores of the last 5 reports, oldest first, for the history chart.
@@ -129,11 +189,13 @@ class AppController extends ChangeNotifier {
     return recent.map((r) => r.score).toList();
   }
 
+  /// The waivers count.
   int get waiversCount => reports.fold(
         0,
         (sum, r) => sum + r.waivedDefects.length,
       );
 
+  /// The migration summary.
   MigrationSummary get migrationSummary => MigrationSummary(
         reports: reports.length,
         rules: rules.length,
@@ -141,6 +203,7 @@ class AppController extends ChangeNotifier {
         defectsCaught: defectsCaught,
       );
 
+  /// Finds the report with the given id.
   Report? reportById(String id) {
     for (final report in reports) {
       if (report.id == id) return report;
@@ -148,6 +211,7 @@ class AppController extends ChangeNotifier {
     return null;
   }
 
+  /// Finds the export with the given id.
   ExportFile? exportById(String id) {
     for (final export in exports) {
       if (export.id == id) return export;
@@ -155,8 +219,10 @@ class AppController extends ChangeNotifier {
     return null;
   }
 
+  /// Finds the rule with the given code.
   Rule? ruleByCode(String code) => findRule(rules, code);
 
+  /// Finds the CI run with the given id.
   CiRun? ciRunById(String id) {
     for (final run in ciRuns) {
       if (run.id == id) return run;
@@ -238,6 +304,7 @@ class AppController extends ChangeNotifier {
 
   // -- exports ----------------------------------------------------------
 
+  /// Selects the export.
   void selectExport(ExportFile export) {
     selectedExport = export;
     notifyListeners();
@@ -356,6 +423,7 @@ class AppController extends ChangeNotifier {
     return report;
   }
 
+  /// Cancels the inspection.
   void cancelInspection() {
     _cancelRequested = true;
   }
@@ -514,6 +582,7 @@ class AppController extends ChangeNotifier {
     notifyListeners();
   }
 
+  /// Toggles the rule.
   Future<void> toggleRule(String code, bool enabled) async {
     rules = rules
         .map((r) => r.code == code ? r.copyWith(enabled: enabled) : r)
@@ -531,6 +600,7 @@ class AppController extends ChangeNotifier {
 
   // -- settings ---------------------------------------------------------
 
+  /// Updates the settings.
   Future<void> updateSettings(AppSettings next) async {
     settings = next;
     await _store.saveSettings(settings);
@@ -539,6 +609,7 @@ class AppController extends ChangeNotifier {
 
   // -- auth (local-only in v0.1 — no backend) ---------------------------
 
+  /// Continues as a guest.
   Future<void> continueAsGuest() async {
     onboarded = true;
     await _store.setOnboarded(true);
@@ -582,6 +653,7 @@ class AppController extends ChangeNotifier {
     return null;
   }
 
+  /// The pending account.
   Account? get pendingAccount => _pendingAccount;
 
   static String? _validateCredentials({
@@ -654,23 +726,27 @@ class AppController extends ChangeNotifier {
 
   // -- CI ---------------------------------------------------------------
 
+  /// Sets whether CI is connected.
   Future<void> setCiConnected(bool connected) async {
     await updateSettings(settings.copyWith(ciConnected: connected));
   }
 
   // -- exports ----------------------------------------------------------
 
+  /// The exporter.
   ReportExportService get exporter => _exporter;
 }
 
 /// Provides the [AppController] to the widget tree.
 class AppScope extends InheritedNotifier<AppController> {
+  /// Creates an [AppScope].
   const AppScope({
     required super.notifier,
     required super.child,
     super.key,
   });
 
+  /// Returns the [AppController] above this context.
   static AppController of(BuildContext context) {
     final scope =
         context.dependOnInheritedWidgetOfExactType<AppScope>();

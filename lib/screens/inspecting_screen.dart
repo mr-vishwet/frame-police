@@ -7,7 +7,7 @@ library;
 
 import 'dart:async';
 
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 import '../core/constants.dart';
 import '../core/format.dart';
@@ -16,7 +16,9 @@ import '../state/app_controller.dart';
 import '../widgets/app_shell.dart';
 import '../widgets/fp_widgets.dart';
 
+/// The inspecting screen screen.
 class InspectingScreen extends StatefulWidget {
+  /// Creates an [InspectingScreen].
   const InspectingScreen({super.key});
 
   @override
@@ -113,7 +115,7 @@ class _InspectingScreenState extends State<InspectingScreen> {
     final export = exportId == null
         ? controller.selectedExport
         : controller.exportById(exportId);
-    final p = AppTheme.palette;
+    const p = AppTheme.palette;
     final progress = controller.inspectionProgress;
     final running = controller.probeProgress
         .where((probe) => probe.state == ProbeState.running)
@@ -139,7 +141,7 @@ class _InspectingScreenState extends State<InspectingScreen> {
 
     return FpScaffold(
       title: 'Inspecting',
-      actions: [Center(child: Tag(kRegistryVersion))],
+      actions: const [Center(child: Tag(kRegistryVersion))],
       body: FpScrollBody(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -194,7 +196,7 @@ class _InspectingScreenState extends State<InspectingScreen> {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Kicker('Probes · registry $kRegistryVersion'),
+                      const Kicker('Probes · registry $kRegistryVersion'),
                       Row(
                         children: [
                           Container(
@@ -257,7 +259,7 @@ class _InspectingScreenState extends State<InspectingScreen> {
   }
 
   Widget _probeRow(BuildContext context, ProbeProgress probe) {
-    final p = AppTheme.palette;
+    const p = AppTheme.palette;
     final (icon, color, label) = switch (probe.state) {
       ProbeState.queued => (Icons.schedule, p.muted, 'Queued'),
       ProbeState.running => (Icons.sync, p.orange, 'Running'),

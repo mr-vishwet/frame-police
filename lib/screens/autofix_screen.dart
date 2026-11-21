@@ -5,7 +5,7 @@
 /// defect. A fix isn't real until re-inspection confirms it.
 library;
 
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 import '../core/constants.dart';
 import '../core/theme.dart';
@@ -15,7 +15,9 @@ import '../widgets/app_shell.dart';
 import '../widgets/fp_widgets.dart';
 import '../widgets/waveform.dart';
 
+/// The autofix screen screen.
 class AutofixScreen extends StatelessWidget {
+  /// Creates an [AutofixScreen].
   const AutofixScreen({super.key});
 
   @override
@@ -27,7 +29,7 @@ class AutofixScreen extends StatelessWidget {
     final report = reportId == null
         ? controller.currentReport
         : controller.reportById(reportId) ?? controller.currentReport;
-    final p = AppTheme.palette;
+    const p = AppTheme.palette;
     if (report == null) {
       return const FpScaffold(
         title: 'Auto-fix',
@@ -196,7 +198,7 @@ class AutofixScreen extends StatelessWidget {
   }
 
   Widget _fixRow(BuildContext context, Finding finding) {
-    final p = AppTheme.palette;
+    const p = AppTheme.palette;
     final (icon, color, label, sub) = switch (finding.status) {
       FindingStatus.fixed => (
           Icons.check_circle,

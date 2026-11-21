@@ -43,24 +43,30 @@ void main() {
     test('is valid JSON with the report and the contract', () {
       final decoded =
           jsonDecode(Reporter.toJson(report)) as Map<String, dynamic>;
-      expect(decoded['report']['exitCode'], 1);
-      expect(decoded['report']['registryVersion'], kRegistryVersion);
-      expect(decoded['exitCodeContract']['0'], contains('Clean'));
-      expect(decoded['exitCodeContract']['1'], contains('Defects'));
-      expect(decoded['exitCodeContract']['2'], contains('error'));
+      final reportJson = decoded['report'] as Map<String, dynamic>;
+      final contractJson =
+          decoded['exitCodeContract'] as Map<String, dynamic>;
+      expect(reportJson['exitCode'], 1);
+      expect(reportJson['registryVersion'], kRegistryVersion);
+      expect(contractJson['0'], contains('Clean'));
+      expect(contractJson['1'], contains('Defects'));
+      expect(contractJson['2'], contains('error'));
     });
 
     test('carries the waiver and its reason', () {
       final decoded =
           jsonDecode(Reporter.toJson(report)) as Map<String, dynamic>;
-      final findings =
-          decoded['report']['findings'] as List<dynamic>;
+      final reportJson = decoded['report'] as Map<String, dynamic>;
+      final findings = reportJson['findings'] as List<dynamic>;
       final waived = findings.firstWhere(
-        (f) => f['ruleCode'] == kRuleSubtitleSafeArea,
+        (f) =>
+            (f as Map<String, dynamic>)['ruleCode'] ==
+            kRuleSubtitleSafeArea,
       ) as Map<String, dynamic>;
       expect(waived['status'], 'waived');
+      final waiverJson = waived['waiver'] as Map<String, dynamic>;
       expect(
-        waived['waiver']['reason'],
+        waiverJson['reason'],
         DemoFixture.waiverReason,
       );
     });

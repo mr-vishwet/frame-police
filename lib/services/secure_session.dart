@@ -11,6 +11,7 @@ import 'dart:math';
 
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
+/// Secure session.
 class SecureSession {
   static const _tokenKey = 'fp.session_token.v1';
 
@@ -29,5 +30,6 @@ class SecureSession {
   /// The stored session (`email|token`), or null when signed out.
   Future<String?> readSession() => _storage.read(key: _tokenKey);
 
+  /// Clears the session.
   Future<void> clearSession() => _storage.delete(key: _tokenKey);
 }

@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 /// Frame Police theme — the V7 palette: near-black space, amber accent.
@@ -14,6 +14,7 @@ import 'package:google_fonts/google_fonts.dart';
 /// Colour tokens come from the V7 design source
 /// (`v7_framepolice.py`): BG0 #0B0D10, amber #F5A524 → orange #F97316.
 class FpPalette {
+  /// Creates a [FpPalette].
   const FpPalette({
     required this.background0,
     required this.background1,
@@ -53,21 +54,37 @@ class FpPalette {
     hairline: Color(0x26FFFFFF),
   );
 
+  /// The background 0.
   final Color background0;
+  /// The background 1.
   final Color background1;
+  /// The background 2.
   final Color background2;
+  /// The ink.
   final Color ink;
+  /// The secondary.
   final Color secondary;
+  /// The muted.
   final Color muted;
+  /// The amber.
   final Color amber;
+  /// The orange.
   final Color orange;
+  /// The green.
   final Color green;
+  /// The red.
   final Color red;
+  /// The red deep.
   final Color redDeep;
+  /// The pink.
   final Color pink;
+  /// The cyan.
   final Color cyan;
+  /// The glass.
   final Color glass;
+  /// The glass strong.
   final Color glassStrong;
+  /// The hairline.
   final Color hairline;
 
   /// Amber → orange gradient used for primary CTAs and the badge.
@@ -81,6 +98,7 @@ class FpPalette {
   Color get faint => ink.withValues(alpha: 0.6);
 }
 
+/// App theme.
 class AppTheme {
   AppTheme._();
 

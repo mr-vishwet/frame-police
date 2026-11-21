@@ -4,7 +4,7 @@
 /// of them — reports stay yours.
 library;
 
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 import '../core/constants.dart';
 import '../core/responsive.dart';
@@ -13,14 +13,16 @@ import '../state/app_controller.dart';
 import '../widgets/app_shell.dart';
 import '../widgets/fp_widgets.dart';
 
+/// The connected screen screen.
 class ConnectedScreen extends StatelessWidget {
+  /// Creates a [ConnectedScreen].
   const ConnectedScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
     final controller = AppScope.of(context);
     final settings = controller.settings;
-    final p = AppTheme.palette;
+    const p = AppTheme.palette;
     return FpScaffold(
       title: 'Connected',
       showBack: true,

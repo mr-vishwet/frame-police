@@ -6,7 +6,7 @@
 /// clean-exports column.
 library;
 
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 import '../core/responsive.dart';
 import '../core/theme.dart';
@@ -15,7 +15,9 @@ import '../widgets/app_shell.dart';
 import '../widgets/fp_widgets.dart';
 import '../widgets/logo.dart';
 
+/// The payoff screen screen.
 class PayoffScreen extends StatelessWidget {
+  /// Creates a [PayoffScreen].
   const PayoffScreen({super.key});
 
   @override
@@ -27,7 +29,7 @@ class PayoffScreen extends StatelessWidget {
     final report = reportId == null
         ? controller.currentReport
         : controller.reportById(reportId) ?? controller.currentReport;
-    final p = AppTheme.palette;
+    const p = AppTheme.palette;
     if (report == null) {
       return const FpScaffold(
         title: 'Exit 0',

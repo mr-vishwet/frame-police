@@ -5,13 +5,14 @@
 /// accents) so screens stay composition, not styling.
 library;
 
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 import '../core/constants.dart';
 import '../core/theme.dart';
 
 /// A glassmorphic card — the V7 surface.
 class GlassCard extends StatelessWidget {
+  /// Creates a [GlassCard].
   const GlassCard({
     required this.child,
     this.padding = const EdgeInsets.all(18),
@@ -19,13 +20,16 @@ class GlassCard extends StatelessWidget {
     super.key,
   });
 
+  /// The child.
   final Widget child;
+  /// The padding.
   final EdgeInsetsGeometry padding;
+  /// The border color.
   final Color? borderColor;
 
   @override
   Widget build(BuildContext context) {
-    final p = AppTheme.palette;
+    const p = AppTheme.palette;
     return Container(
       padding: padding,
       decoration: BoxDecoration(
@@ -40,8 +44,10 @@ class GlassCard extends StatelessWidget {
 
 /// Small uppercase kicker label above a section.
 class Kicker extends StatelessWidget {
+  /// Creates a [Kicker].
   const Kicker(this.text, {super.key});
 
+  /// The text.
   final String text;
 
   @override
@@ -59,6 +65,7 @@ class Kicker extends StatelessWidget {
 
 /// A pill tag (e.g. `Registry v2.4.1`, `Exit 1`, `DEMO`).
 class Tag extends StatelessWidget {
+  /// Creates a [Tag].
   const Tag(
     this.text, {
     this.color,
@@ -66,13 +73,16 @@ class Tag extends StatelessWidget {
     super.key,
   });
 
+  /// The text.
   final String text;
+  /// The color.
   final Color? color;
+  /// Whether the tag is filled.
   final bool filled;
 
   @override
   Widget build(BuildContext context) {
-    final p = AppTheme.palette;
+    const p = AppTheme.palette;
     final c = color ?? p.secondary;
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
@@ -91,6 +101,7 @@ class Tag extends StatelessWidget {
 
 /// A statistic: label above a large value above a caption.
 class StatTile extends StatelessWidget {
+  /// Creates a [StatTile].
   const StatTile({
     required this.label,
     required this.value,
@@ -99,14 +110,18 @@ class StatTile extends StatelessWidget {
     super.key,
   });
 
+  /// The label.
   final String label;
+  /// The value.
   final String value;
+  /// The caption.
   final String caption;
+  /// The value color.
   final Color? valueColor;
 
   @override
   Widget build(BuildContext context) {
-    final p = AppTheme.palette;
+    const p = AppTheme.palette;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -137,14 +152,17 @@ class StatTile extends StatelessWidget {
 
 /// The exit-code badge — the verdict, always visible on report screens.
 class ExitBadge extends StatelessWidget {
+  /// Creates an [ExitBadge].
   const ExitBadge(this.exitCode, {this.large = false, super.key});
 
+  /// The exit code.
   final int exitCode;
+  /// Whether to use the large size.
   final bool large;
 
   @override
   Widget build(BuildContext context) {
-    final p = AppTheme.palette;
+    const p = AppTheme.palette;
     final color = exitCode == kExitClean ? p.green : p.red;
     return Tag(
       'Exit $exitCode',
@@ -156,6 +174,7 @@ class ExitBadge extends StatelessWidget {
 
 /// Primary gradient CTA.
 class FpPrimaryButton extends StatelessWidget {
+  /// Creates a [FpPrimaryButton].
   const FpPrimaryButton({
     required this.label,
     required this.onPressed,
@@ -163,13 +182,16 @@ class FpPrimaryButton extends StatelessWidget {
     super.key,
   });
 
+  /// The label.
   final String label;
+  /// The on pressed.
   final VoidCallback? onPressed;
+  /// The icon.
   final IconData? icon;
 
   @override
   Widget build(BuildContext context) {
-    final p = AppTheme.palette;
+    const p = AppTheme.palette;
     final child = Row(
       mainAxisAlignment: MainAxisAlignment.center,
       mainAxisSize: MainAxisSize.min,
@@ -218,6 +240,7 @@ class FpPrimaryButton extends StatelessWidget {
 
 /// Ghost (outlined) button.
 class FpGhostButton extends StatelessWidget {
+  /// Creates a [FpGhostButton].
   const FpGhostButton({
     required this.label,
     required this.onPressed,
@@ -225,8 +248,11 @@ class FpGhostButton extends StatelessWidget {
     super.key,
   });
 
+  /// The label.
   final String label;
+  /// The on pressed.
   final VoidCallback? onPressed;
+  /// The icon.
   final IconData? icon;
 
   @override
@@ -244,6 +270,7 @@ class FpGhostButton extends StatelessWidget {
 
 /// Danger (red outline) button — destructive actions only.
 class FpDangerButton extends StatelessWidget {
+  /// Creates a [FpDangerButton].
   const FpDangerButton({
     required this.label,
     required this.onPressed,
@@ -251,13 +278,16 @@ class FpDangerButton extends StatelessWidget {
     super.key,
   });
 
+  /// The label.
   final String label;
+  /// The on pressed.
   final VoidCallback? onPressed;
+  /// The icon.
   final IconData? icon;
 
   @override
   Widget build(BuildContext context) {
-    final p = AppTheme.palette;
+    const p = AppTheme.palette;
     return OutlinedButton.icon(
       onPressed: onPressed,
       icon: icon == null
@@ -274,6 +304,7 @@ class FpDangerButton extends StatelessWidget {
 
 /// A settings-style row: icon, title, subtitle, trailing widget.
 class FpRow extends StatelessWidget {
+  /// Creates a [FpRow].
   const FpRow({
     required this.title,
     this.subtitle,
@@ -284,16 +315,22 @@ class FpRow extends StatelessWidget {
     super.key,
   });
 
+  /// The title.
   final String title;
+  /// The subtitle.
   final String? subtitle;
+  /// The icon.
   final IconData? icon;
+  /// The trailing.
   final Widget? trailing;
+  /// The on tap.
   final VoidCallback? onTap;
+  /// Whether to use the danger style.
   final bool danger;
 
   @override
   Widget build(BuildContext context) {
-    final p = AppTheme.palette;
+    const p = AppTheme.palette;
     final content = Row(
       children: [
         if (icon != null) ...[
@@ -360,6 +397,7 @@ class FpRow extends StatelessWidget {
 
 /// A settings toggle row.
 class FpToggleRow extends StatelessWidget {
+  /// Creates a [FpToggleRow].
   const FpToggleRow({
     required this.title,
     required this.value,
@@ -369,10 +407,15 @@ class FpToggleRow extends StatelessWidget {
     super.key,
   });
 
+  /// The title.
   final String title;
+  /// The subtitle.
   final String? subtitle;
+  /// Whether the toggle is on.
   final bool value;
+  /// The on changed.
   final ValueChanged<bool> onChanged;
+  /// The icon.
   final IconData? icon;
 
   @override
@@ -388,6 +431,7 @@ class FpToggleRow extends StatelessWidget {
 
 /// Empty state with an icon, title, and body.
 class FpEmptyState extends StatelessWidget {
+  /// Creates a [FpEmptyState].
   const FpEmptyState({
     required this.icon,
     required this.title,
@@ -395,13 +439,16 @@ class FpEmptyState extends StatelessWidget {
     super.key,
   });
 
+  /// The icon.
   final IconData icon;
+  /// The title.
   final String title;
+  /// The body.
   final String body;
 
   @override
   Widget build(BuildContext context) {
-    final p = AppTheme.palette;
+    const p = AppTheme.palette;
     return GlassCard(
       child: Column(
         children: [

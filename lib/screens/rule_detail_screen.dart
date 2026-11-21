@@ -5,7 +5,7 @@
 /// On web the limit editor sits beside the schema + history.
 library;
 
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 import '../core/responsive.dart';
 import '../core/theme.dart';
@@ -14,7 +14,9 @@ import '../state/app_controller.dart';
 import '../widgets/app_shell.dart';
 import '../widgets/fp_widgets.dart';
 
+/// The rule detail screen screen.
 class RuleDetailScreen extends StatefulWidget {
+  /// Creates a [RuleDetailScreen].
   const RuleDetailScreen({super.key});
 
   @override
@@ -41,7 +43,7 @@ class _RuleDetailScreenState extends State<RuleDetailScreen> {
     final ruleCode = args?['ruleCode'] as String?;
     final rule =
         ruleCode == null ? null : controller.ruleByCode(ruleCode);
-    final p = AppTheme.palette;
+    const p = AppTheme.palette;
     if (rule == null) {
       return const FpScaffold(
         title: 'Rule',

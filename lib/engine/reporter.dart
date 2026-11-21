@@ -14,9 +14,23 @@ import 'exit_codes.dart';
 import 'models.dart';
 
 /// The four export formats.
-enum ReportFormat { html, json, markdown, tty }
+enum ReportFormat {
+  /// HTML report.
+  html,
 
+  /// JSON.
+  json,
+
+  /// Markdown.
+  markdown,
+
+  /// Terminal (TTY) output.
+  tty,
+}
+
+/// Report format label.
 extension ReportFormatLabel on ReportFormat {
+  /// The label.
   String get label {
     switch (this) {
       case ReportFormat.html:
@@ -30,6 +44,7 @@ extension ReportFormatLabel on ReportFormat {
     }
   }
 
+  /// The description.
   String get description {
     switch (this) {
       case ReportFormat.html:
@@ -43,6 +58,7 @@ extension ReportFormatLabel on ReportFormat {
     }
   }
 
+  /// The file extension.
   String get fileExtension {
     switch (this) {
       case ReportFormat.html:
@@ -57,6 +73,7 @@ extension ReportFormatLabel on ReportFormat {
   }
 }
 
+/// Reporter.
 class Reporter {
   Reporter._();
 
@@ -188,7 +205,7 @@ class Reporter {
       }
     }
     for (final finding in report.suggestions) {
-      buffer.writeln('${amber}○ ${finding.ruleCode}$reset  ${finding.title}');
+      buffer.writeln('$amber○ ${finding.ruleCode}$reset  ${finding.title}');
       buffer.writeln('  ${finding.detail}');
     }
     buffer.writeln();

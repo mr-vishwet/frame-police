@@ -5,30 +5,35 @@
 /// frame shows it inside (green). The fix is shown, not described.
 library;
 
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 import '../core/theme.dart';
 
+/// The frame mock widget.
 class FrameMock extends StatelessWidget {
+  /// Creates a [FrameMock].
   const FrameMock.before({
     required this.subtitleY,
     required this.limitY,
     super.key,
   }) : _isBefore = true;
 
+  /// Creates a [FrameMock].
   const FrameMock.after({
     required this.subtitleY,
     required this.limitY,
     super.key,
   }) : _isBefore = false;
 
+  /// The subtitle y.
   final double subtitleY;
+  /// The limit y.
   final double limitY;
   final bool _isBefore;
 
   @override
   Widget build(BuildContext context) {
-    final p = AppTheme.palette;
+    const p = AppTheme.palette;
     // Frame is 163x190 in the design; scale the y values (frame height
     // 1920 px) into the mock's height.
     const mockHeight = 190.0;

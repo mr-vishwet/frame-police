@@ -5,7 +5,7 @@
 /// the desktop shell.
 library;
 
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 import '../core/constants.dart';
 import '../core/theme.dart';
@@ -14,13 +14,15 @@ import '../widgets/app_shell.dart';
 import '../widgets/fp_widgets.dart';
 import '../widgets/logo.dart';
 
+/// The welcome screen screen.
 class WelcomeScreen extends StatelessWidget {
+  /// Creates a [WelcomeScreen].
   const WelcomeScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
     final controller = AppScope.read(context);
-    final p = AppTheme.palette;
+    const p = AppTheme.palette;
     return FpScaffold(
       body: FpScrollBody(
         child: Column(
@@ -84,27 +86,27 @@ class WelcomeScreen extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 8),
-            GlassCard(
+            const GlassCard(
               padding:
-                  const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
+                  EdgeInsets.symmetric(horizontal: 18, vertical: 12),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Kicker('As a guest, you get'),
-                  const FpRow(
+                  Kicker('As a guest, you get'),
+                  FpRow(
                     icon: Icons.document_scanner_outlined,
                     title: 'The full inspector',
                     subtitle: 'All 14 rules — 11 defect checks that decide '
                         'the exit code, 3 suggestions.',
                   ),
-                  const Divider(height: 8),
-                  const FpRow(
+                  Divider(height: 8),
+                  FpRow(
                     icon: Icons.article_outlined,
                     title: 'Reports, waivers and history',
                     subtitle: 'Every verdict on-device, with its evidence.',
                   ),
-                  const Divider(height: 8),
-                  const FpRow(
+                  Divider(height: 8),
+                  FpRow(
                     icon: Icons.refresh_outlined,
                     title: 'Deterministic, every time',
                     subtitle: 'Same input, same report. The exit code never '

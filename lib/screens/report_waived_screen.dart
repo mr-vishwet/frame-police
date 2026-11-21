@@ -4,7 +4,7 @@
 /// and exit 1 until re-inspection confirms the fix.
 library;
 
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 import '../core/responsive.dart';
 import '../core/theme.dart';
@@ -13,7 +13,9 @@ import '../state/app_controller.dart';
 import '../widgets/app_shell.dart';
 import '../widgets/fp_widgets.dart';
 
+/// The report waived screen screen.
 class ReportWaivedScreen extends StatelessWidget {
+  /// Creates a [ReportWaivedScreen].
   const ReportWaivedScreen({super.key});
 
   @override
@@ -25,7 +27,7 @@ class ReportWaivedScreen extends StatelessWidget {
     final report = reportId == null
         ? controller.currentReport
         : controller.reportById(reportId) ?? controller.currentReport;
-    final p = AppTheme.palette;
+    const p = AppTheme.palette;
     if (report == null) {
       return const FpScaffold(
         title: 'Report',
@@ -172,7 +174,7 @@ class ReportWaivedScreen extends StatelessWidget {
     Color color,
     String status,
   ) {
-    final p = AppTheme.palette;
+    const p = AppTheme.palette;
     return GlassCard(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       child: Column(

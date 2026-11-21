@@ -5,7 +5,7 @@
 /// required — guests get the upgrade prompt).
 library;
 
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter/services.dart';
 
 import '../core/constants.dart';
@@ -16,18 +16,20 @@ import '../state/app_controller.dart';
 import '../widgets/app_shell.dart';
 import '../widgets/fp_widgets.dart';
 
+/// The ci setup screen screen.
 class CiSetupScreen extends StatelessWidget {
+  /// Creates a [CiSetupScreen].
   const CiSetupScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
     final controller = AppScope.of(context);
-    final p = AppTheme.palette;
+    const p = AppTheme.palette;
     final connected = controller.settings.ciConnected;
     return FpScaffold(
       title: 'CI setup',
       showBack: true,
-      actions: [Center(child: Tag('GitHub Action'))],
+      actions: const [Center(child: Tag('GitHub Action'))],
       body: FpScrollBody(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,

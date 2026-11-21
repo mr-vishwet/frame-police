@@ -12,7 +12,13 @@ import 'exit_codes.dart';
 /// Whether a finding decides the exit code (defect) or advises
 /// (suggestion). Separate universes: suggestions never affect the exit
 /// code, the score, or anything CI reads.
-enum FindingKind { defect, suggestion }
+enum FindingKind {
+  /// A defect: decides the exit code.
+  defect,
+
+  /// A suggestion: advises only, never affects the exit code.
+  suggestion,
+}
 
 /// Lifecycle of a defect finding.
 ///
@@ -22,7 +28,19 @@ enum FindingKind { defect, suggestion }
 /// * [confirmed] — re-inspection verified the fix. Does not block.
 /// * [waived] — waived with a reason. The reason stays in the report;
 ///   does not block, never deletes the finding.
-enum FindingStatus { open, fixed, confirmed, waived }
+enum FindingStatus {
+  /// Found, undecided. Blocks the release (exit 1).
+  open,
+
+  /// Auto-fix applied, awaiting re-inspection. Still blocks the release.
+  fixed,
+
+  /// Re-inspection verified the fix. Does not block.
+  confirmed,
+
+  /// Waived with a reason. Does not block; the finding is never deleted.
+  waived,
+}
 
 /// A creative export to inspect (a video file in v0.1).
 ///
@@ -32,6 +50,7 @@ enum FindingStatus { open, fixed, confirmed, waived }
 /// initializer list. No call site constructs an [ExportFile] in a
 /// const context, so dropping `const` changes nothing else.
 class ExportFile {
+  /// Creates an [ExportFile].
   ExportFile({
     required this.id,
     required this.name,
@@ -47,6 +66,7 @@ class ExportFile {
     String? declaredAspect,
   }) : declaredAspect = declaredAspect ?? _aspectOf(width, height);
 
+  /// Creates an [ExportFile] from JSON.
   factory ExportFile.fromJson(Map<String, dynamic> json) => ExportFile(
         id: json['id'] as String,
         name: json['name'] as String,
@@ -62,14 +82,23 @@ class ExportFile {
         declaredAspect: json['declaredAspect'] as String?,
       );
 
+  /// The id.
   final String id;
+  /// The name.
   final String name;
+  /// The duration in seconds.
   final int durationSeconds;
+  /// The frame count.
   final int frameCount;
+  /// The width.
   final int width;
+  /// The height.
   final int height;
+  /// The fps.
   final int fps;
+  /// The size in bytes.
   final int sizeBytes;
+  /// When it was added.
   final DateTime addedAt;
 
   /// The aspect ratio the project declares for this export (e.g. `9:16`
@@ -85,8 +114,10 @@ class ExportFile {
   /// until the native media probe lands in phase 2.
   final ProbeData probe;
 
+  /// Whether this is a demo export.
   final bool isDemo;
 
+  /// The aspect label.
   String get aspectLabel => _aspectOf(width, height);
 
   static String _aspectOf(int w, int h) {
@@ -96,6 +127,7 @@ class ExportFile {
 
   static int _gcd(int a, int b) => b == 0 ? a : _gcd(b, a % b);
 
+  /// Converts this to JSON.
   Map<String, dynamic> toJson() => {
         'id': id,
         'name': name,
@@ -118,6 +150,7 @@ class ExportFile {
 /// raw media — which is what makes inspections deterministic: same
 /// probe data + same registry version = same report.
 class ProbeData {
+  /// Creates a [ProbeData].
   const ProbeData({
     required this.subtitleBottomY,
     required this.subtitleTimecode,
@@ -136,6 +169,7 @@ class ProbeData {
     this.isDemoProbe = false,
   });
 
+  /// Creates a [ProbeData] from JSON.
   factory ProbeData.fromJson(Map<String, dynamic> json) => ProbeData(
         subtitleBottomY: (json['subtitleBottomY'] as num).toDouble(),
         subtitleTimecode: json['subtitleTimecode'] as String,
@@ -157,10 +191,12 @@ class ProbeData {
 
   /// Lowest subtitle bottom edge in px (frame height is the reference).
   final double subtitleBottomY;
+  /// The subtitle timecode.
   final String subtitleTimecode;
 
   /// Highest audio peak in dBFS, and where it sits.
   final double peakDbfs;
+  /// The peak timecode.
   final String peakTimecode;
 
   /// Longest stretch of dead air in seconds.
@@ -197,6 +233,7 @@ class ProbeData {
   /// measured media. Labelled DEMO in the report.
   final bool isDemoProbe;
 
+  /// Returns a copy of this with the given fields replaced.
   ProbeData copyWith({
     double? subtitleBottomY,
     double? peakDbfs,
@@ -230,6 +267,7 @@ class ProbeData {
         isDemoProbe: isDemoProbe,
       );
 
+  /// Converts this to JSON.
   Map<String, dynamic> toJson() => {
         'subtitleBottomY': subtitleBottomY,
         'subtitleTimecode': subtitleTimecode,
@@ -252,22 +290,28 @@ class ProbeData {
 /// One entry in a rule's version history. Editing a limit creates a new
 /// version — history is never rewritten.
 class RuleVersion {
+  /// Creates a [RuleVersion].
   const RuleVersion({
     required this.version,
     required this.limitLabel,
     required this.note,
   });
 
+  /// Creates a [RuleVersion] from JSON.
   factory RuleVersion.fromJson(Map<String, dynamic> json) => RuleVersion(
         version: json['version'] as String,
         limitLabel: json['limitLabel'] as String,
         note: json['note'] as String,
       );
 
+  /// The version.
   final String version;
+  /// The limit label.
   final String limitLabel;
+  /// The note.
   final String note;
 
+  /// Converts this to JSON.
   Map<String, dynamic> toJson() => {
         'version': version,
         'limitLabel': limitLabel,
@@ -277,6 +321,7 @@ class RuleVersion {
 
 /// A versioned rule in the registry.
 class Rule {
+  /// Creates a [Rule].
   const Rule({
     required this.code,
     required this.name,
@@ -290,6 +335,7 @@ class Rule {
     this.enabled = true,
   });
 
+  /// Creates a [Rule] from JSON.
   factory Rule.fromJson(Map<String, dynamic> json) => Rule(
         code: json['code'] as String,
         name: json['name'] as String,
@@ -307,10 +353,15 @@ class Rule {
         enabled: json['enabled'] as bool? ?? true,
       );
 
+  /// The code.
   final String code;
+  /// The name.
   final String name;
+  /// The description.
   final String description;
+  /// The kind.
   final FindingKind kind;
+  /// The version.
   final String version;
 
   /// Human-readable limit, e.g. `90% margin` / `y ≤ 1,052 px`.
@@ -318,10 +369,14 @@ class Rule {
 
   /// Numeric limit the engine compares against (units in [unit]).
   final double limitValue;
+  /// The unit.
   final String unit;
+  /// The versions.
   final List<RuleVersion> versions;
+  /// Whether the rule is enabled.
   final bool enabled;
 
+  /// Whether this is a defect.
   bool get isDefect => kind == FindingKind.defect;
 
   /// Returns a copy with a new limit, versioned: the old version moves
@@ -356,6 +411,7 @@ class Rule {
     );
   }
 
+  /// Creates a [Rule].
   Rule copyWith({bool? enabled}) => Rule(
         code: code,
         name: name,
@@ -369,6 +425,7 @@ class Rule {
         enabled: enabled ?? this.enabled,
       );
 
+  /// Converts this to JSON.
   Map<String, dynamic> toJson() => {
         'code': code,
         'name': name,
@@ -385,24 +442,29 @@ class Rule {
 
 /// A one-tap auto-fix for a defect finding.
 class AutoFix {
+  /// Creates an [AutoFix].
   const AutoFix({
     required this.label,
     required this.detail,
     required this.afterLabel,
   });
 
+  /// Creates an [AutoFix] from JSON.
   factory AutoFix.fromJson(Map<String, dynamic> json) => AutoFix(
         label: json['label'] as String,
         detail: json['detail'] as String,
         afterLabel: json['afterLabel'] as String,
       );
 
+  /// The label.
   final String label;
+  /// The detail.
   final String detail;
 
   /// What the measured value becomes after the fix, e.g. `y = 1,040 px`.
   final String afterLabel;
 
+  /// Converts this to JSON.
   Map<String, dynamic> toJson() => {
         'label': label,
         'detail': detail,
@@ -412,6 +474,7 @@ class AutoFix {
 
 /// A waiver: a defect overridden by a human, with a reason, on record.
 class Waiver {
+  /// Creates a [Waiver].
   const Waiver({
     required this.reason,
     required this.tag,
@@ -419,6 +482,7 @@ class Waiver {
     required this.waivedBy,
   });
 
+  /// Creates a [Waiver] from JSON.
   factory Waiver.fromJson(Map<String, dynamic> json) => Waiver(
         reason: json['reason'] as String,
         tag: json['tag'] as String,
@@ -426,11 +490,16 @@ class Waiver {
         waivedBy: json['waivedBy'] as String,
       );
 
+  /// The reason.
   final String reason;
+  /// The tag.
   final String tag;
+  /// When it was created.
   final DateTime createdAt;
+  /// Who waived it.
   final String waivedBy;
 
+  /// Converts this to JSON.
   Map<String, dynamic> toJson() => {
         'reason': reason,
         'tag': tag,
@@ -444,6 +513,7 @@ class Waiver {
 /// Every defect carries timecode, measured value, and limit — measured,
 /// not guessed. Suggestions carry the same evidence shape.
 class Finding implements FindingLike {
+  /// Creates a [Finding].
   const Finding({
     required this.id,
     required this.ruleCode,
@@ -461,6 +531,7 @@ class Finding implements FindingLike {
     this.waiver,
   });
 
+  /// Creates a [Finding] from JSON.
   factory Finding.fromJson(Map<String, dynamic> json) => Finding(
         id: json['id'] as String,
         ruleCode: json['ruleCode'] as String,
@@ -486,29 +557,46 @@ class Finding implements FindingLike {
             : Waiver.fromJson(json['waiver'] as Map<String, dynamic>),
       );
 
+  /// The id.
   final String id;
+  /// The rule code.
   final String ruleCode;
+  /// The rule version.
   final String ruleVersion;
+  /// The title.
   final String title;
+  /// The kind.
   final FindingKind kind;
+  /// The timecode.
   final String timecode;
+  /// The measured label.
   final String measuredLabel;
+  /// The measured value.
   final double measuredValue;
+  /// The limit label.
   final String limitLabel;
+  /// The limit value.
   final double limitValue;
+  /// The detail.
   final String detail;
+  /// The status.
   final FindingStatus status;
+  /// The fix.
   final AutoFix? fix;
+  /// The waiver.
   final Waiver? waiver;
 
+  /// Whether this is a defect.
   bool get isDefect => kind == FindingKind.defect;
 
   /// Blocks the release: open, or fixed-but-unconfirmed. Waived and
   /// confirmed findings never block.
+  @override
   bool get blocksRelease =>
       isDefect &&
       (status == FindingStatus.open || status == FindingStatus.fixed);
 
+  /// Creates a [Finding].
   Finding copyWith({FindingStatus? status, Waiver? waiver}) => Finding(
         id: id,
         ruleCode: ruleCode,
@@ -526,6 +614,7 @@ class Finding implements FindingLike {
         waiver: waiver ?? this.waiver,
       );
 
+  /// Converts this to JSON.
   Map<String, dynamic> toJson() => {
         'id': id,
         'ruleCode': ruleCode,
@@ -552,6 +641,7 @@ class Finding implements FindingLike {
 /// edited after the run; the SHA-256 [fingerprint] covers the canonical
 /// JSON so any tampering is detectable.
 class Report {
+  /// Creates a [Report].
   const Report({
     required this.id,
     required this.exportId,
@@ -567,6 +657,7 @@ class Report {
     this.demoProbe = false,
   });
 
+  /// Creates a [Report] from JSON.
   factory Report.fromJson(Map<String, dynamic> json) => Report(
         id: json['id'] as String,
         exportId: json['exportId'] as String,
@@ -584,32 +675,51 @@ class Report {
         demoProbe: json['demoProbe'] as bool? ?? false,
       );
 
+  /// The id.
   final String id;
+  /// The export id.
   final String exportId;
+  /// The export name.
   final String exportName;
+  /// When it was created.
   final DateTime createdAt;
+  /// The registry version.
   final String registryVersion;
+  /// The findings.
   final List<Finding> findings;
+  /// The score.
   final int score;
+  /// The exit code.
   final int exitCode;
+  /// The duration in seconds.
   final int durationSeconds;
+  /// The frames probed.
   final int framesProbed;
+  /// The fingerprint.
   final String fingerprint;
+  /// Whether this report came from the demo probe.
   final bool demoProbe;
 
+  /// The defects.
   List<Finding> get defects =>
       findings.where((f) => f.isDefect).toList();
+  /// The suggestions.
   List<Finding> get suggestions =>
       findings.where((f) => !f.isDefect).toList();
+  /// The open defects.
   List<Finding> get openDefects =>
       defects.where((f) => f.blocksRelease).toList();
+  /// The waived defects.
   List<Finding> get waivedDefects =>
       defects.where((f) => f.status == FindingStatus.waived).toList();
+  /// The fixed awaiting.
   List<Finding> get fixedAwaiting =>
       defects.where((f) => f.status == FindingStatus.fixed).toList();
 
+  /// Whether this is clean.
   bool get isClean => exitCode == kExitClean;
 
+  /// Returns a copy of this with the given fields replaced.
   Report copyWith({
     List<Finding>? findings,
     int? score,
@@ -631,6 +741,7 @@ class Report {
         demoProbe: demoProbe,
       );
 
+  /// Converts this to JSON.
   Map<String, dynamic> toJson() => {
         'id': id,
         'exportId': exportId,
@@ -650,6 +761,7 @@ class Report {
 /// One CI run (GitHub Action). v0.1 seeds demo runs locally; the Action
 /// itself is a proposed integration (see CI setup + README appendix).
 class CiRun {
+  /// Creates a [CiRun].
   const CiRun({
     required this.id,
     required this.number,
@@ -662,6 +774,7 @@ class CiRun {
     this.isDemo = false,
   });
 
+  /// Creates a [CiRun] from JSON.
   factory CiRun.fromJson(Map<String, dynamic> json) => CiRun(
         id: json['id'] as String,
         number: json['number'] as int,
@@ -674,18 +787,29 @@ class CiRun {
         isDemo: json['isDemo'] as bool? ?? false,
       );
 
+  /// The id.
   final String id;
+  /// The number.
   final int number;
+  /// The pr number.
   final int prNumber;
+  /// The pr title.
   final String prTitle;
+  /// The export name.
   final String exportName;
+  /// The exit code.
   final int exitCode;
+  /// The registry version.
   final String registryVersion;
+  /// When it was created.
   final DateTime createdAt;
+  /// Whether this is a demo run.
   final bool isDemo;
 
+  /// Whether the run passed.
   bool get passed => exitCode == kExitClean;
 
+  /// Converts this to JSON.
   Map<String, dynamic> toJson() => {
         'id': id,
         'number': number,
@@ -704,6 +828,7 @@ class CiRun {
 /// and "sync" is a local migration of guest data. Real backend sync is
 /// phase 2 — the UI says so wherever it matters.
 class Account {
+  /// Creates an [Account].
   const Account({
     required this.name,
     required this.email,
@@ -712,6 +837,7 @@ class Account {
     required this.verified,
   });
 
+  /// Creates an [Account] from JSON.
   factory Account.fromJson(Map<String, dynamic> json) => Account(
         name: json['name'] as String,
         email: json['email'] as String,
@@ -720,14 +846,21 @@ class Account {
         verified: json['verified'] as bool? ?? false,
       );
 
+  /// The name.
   final String name;
+  /// The email.
   final String email;
+  /// The plan.
   final String plan;
+  /// When it was created.
   final DateTime createdAt;
+  /// Whether the account is verified.
   final bool verified;
 
+  /// The initial.
   String get initial => name.isEmpty ? '?' : name[0].toUpperCase();
 
+  /// Converts this to JSON.
   Map<String, dynamic> toJson() => {
         'name': name,
         'email': email,
@@ -739,6 +872,7 @@ class Account {
 
 /// App settings, persisted locally.
 class AppSettings {
+  /// Creates an [AppSettings].
   const AppSettings({
     this.suggestionsEnabled = true,
     this.autoInspect = true,
@@ -747,6 +881,7 @@ class AppSettings {
     this.ciConnected = false,
   });
 
+  /// Creates an [AppSettings] from JSON.
   factory AppSettings.fromJson(Map<String, dynamic> json) => AppSettings(
         suggestionsEnabled: json['suggestionsEnabled'] as bool? ?? true,
         autoInspect: json['autoInspect'] as bool? ?? true,
@@ -756,12 +891,18 @@ class AppSettings {
         ciConnected: json['ciConnected'] as bool? ?? false,
       );
 
+  /// Whether suggestions are enabled.
   final bool suggestionsEnabled;
+  /// Whether auto-inspect is enabled.
   final bool autoInspect;
+  /// Whether PR comments are enabled.
   final bool prComments;
+  /// The pinned registry.
   final String pinnedRegistry;
+  /// Whether CI is connected.
   final bool ciConnected;
 
+  /// Returns a copy of this with the given fields replaced.
   AppSettings copyWith({
     bool? suggestionsEnabled,
     bool? autoInspect,
@@ -777,6 +918,7 @@ class AppSettings {
         ciConnected: ciConnected ?? this.ciConnected,
       );
 
+  /// Converts this to JSON.
   Map<String, dynamic> toJson() => {
         'suggestionsEnabled': suggestionsEnabled,
         'autoInspect': autoInspect,

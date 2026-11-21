@@ -4,23 +4,27 @@
 /// latest run is the one that matters — and green when it is clean.
 library;
 
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 import '../core/theme.dart';
 
+/// The score bars widget.
 class ScoreBars extends StatelessWidget {
+  /// Creates a [ScoreBars].
   const ScoreBars({
     required this.scores,
     this.height = 84,
     super.key,
   });
 
+  /// The scores.
   final List<int> scores;
+  /// The height.
   final double height;
 
   @override
   Widget build(BuildContext context) {
-    final p = AppTheme.palette;
+    const p = AppTheme.palette;
     if (scores.isEmpty) {
       return SizedBox(
         height: height,

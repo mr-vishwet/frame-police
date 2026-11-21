@@ -6,7 +6,7 @@
 /// requires; in v0.1 they route to the same local sign-in.
 library;
 
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 import '../core/constants.dart';
 import '../core/theme.dart';
@@ -15,7 +15,9 @@ import '../widgets/app_shell.dart';
 import '../widgets/fp_widgets.dart';
 import '../widgets/logo.dart';
 
+/// The sign in screen screen.
 class SignInScreen extends StatefulWidget {
+  /// Creates a [SignInScreen].
   const SignInScreen({super.key});
 
   @override
@@ -38,7 +40,7 @@ class _SignInScreenState extends State<SignInScreen> {
   @override
   Widget build(BuildContext context) {
     final controller = AppScope.of(context);
-    final p = AppTheme.palette;
+    const p = AppTheme.palette;
     return FpScaffold(
       showBack: true,
       body: FpScrollBody(

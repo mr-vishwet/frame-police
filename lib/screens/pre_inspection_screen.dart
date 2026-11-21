@@ -4,7 +4,7 @@
 /// One Continue: Run inspection.
 library;
 
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 import '../core/constants.dart';
 import '../core/format.dart';
@@ -14,7 +14,9 @@ import '../state/app_controller.dart';
 import '../widgets/app_shell.dart';
 import '../widgets/fp_widgets.dart';
 
+/// The pre inspection screen screen.
 class PreInspectionScreen extends StatelessWidget {
+  /// Creates a [PreInspectionScreen].
   const PreInspectionScreen({super.key});
 
   @override
@@ -26,7 +28,7 @@ class PreInspectionScreen extends StatelessWidget {
     final export = exportId == null
         ? controller.selectedExport
         : controller.exportById(exportId) ?? controller.selectedExport;
-    final p = AppTheme.palette;
+    const p = AppTheme.palette;
     if (export == null) {
       return const FpScaffold(
         title: 'Inspect',
@@ -52,7 +54,7 @@ class PreInspectionScreen extends StatelessWidget {
     return FpScaffold(
       title: 'Inspect',
       showBack: true,
-      actions: [Center(child: Tag(kRegistryVersion))],
+      actions: const [Center(child: Tag(kRegistryVersion))],
       body: FpScrollBody(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,

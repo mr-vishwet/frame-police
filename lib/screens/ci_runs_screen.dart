@@ -5,7 +5,7 @@
 /// list. Runs are seeded demo data until the Action is connected.
 library;
 
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 import '../core/format.dart';
 import '../core/responsive.dart';
@@ -15,13 +15,15 @@ import '../state/app_controller.dart';
 import '../widgets/app_shell.dart';
 import '../widgets/fp_widgets.dart';
 
+/// The ci runs screen screen.
 class CiRunsScreen extends StatelessWidget {
+  /// Creates a [CiRunsScreen].
   const CiRunsScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
     final controller = AppScope.of(context);
-    final p = AppTheme.palette;
+    const p = AppTheme.palette;
     final totals = controller.ciTotals;
     return FpScaffold(
       tabIndex: 3,
@@ -184,7 +186,7 @@ class CiRunsScreen extends StatelessWidget {
   }
 
   Widget _contractRow(BuildContext context, String code, String meaning) {
-    final p = AppTheme.palette;
+    const p = AppTheme.palette;
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 3),
       child: Row(
@@ -211,7 +213,7 @@ class CiRunsScreen extends StatelessWidget {
   }
 
   Widget _ciRow(BuildContext context, CiRun run) {
-    final p = AppTheme.palette;
+    const p = AppTheme.palette;
     return InkWell(
       onTap: () => Navigator.pushNamed(
         context,

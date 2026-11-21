@@ -5,7 +5,7 @@
 /// Guest data is safe while you wait.
 library;
 
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter/services.dart';
 
 import '../core/theme.dart';
@@ -13,7 +13,9 @@ import '../state/app_controller.dart';
 import '../widgets/app_shell.dart';
 import '../widgets/fp_widgets.dart';
 
+/// The verify screen screen.
 class VerifyScreen extends StatefulWidget {
+  /// Creates a [VerifyScreen].
   const VerifyScreen({super.key});
 
   @override
@@ -35,7 +37,7 @@ class _VerifyScreenState extends State<VerifyScreen> {
   Widget build(BuildContext context) {
     final controller = AppScope.of(context);
     final pending = controller.pendingAccount;
-    final p = AppTheme.palette;
+    const p = AppTheme.palette;
     final args =
         ModalRoute.of(context)?.settings.arguments as Map<String, dynamic>?;
     final moveGuestData = args?['moveGuestData'] as bool? ?? true;

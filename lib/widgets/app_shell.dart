@@ -7,7 +7,7 @@
 /// everywhere).
 library;
 
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 import '../core/constants.dart';
 import '../core/responsive.dart';
@@ -16,13 +16,18 @@ import 'logo.dart';
 
 /// The five tab destinations.
 class FpTab {
+  /// Creates a [FpTab].
   const FpTab(this.label, this.icon, this.route);
 
+  /// The label.
   final String label;
+  /// The icon.
   final IconData icon;
+  /// The route.
   final String route;
 }
 
+/// The fp tabs.
 const List<FpTab> fpTabs = [
   FpTab('Home', Icons.home_outlined, '/home'),
   FpTab('Inspect', Icons.document_scanner_outlined, '/inspect'),
@@ -33,6 +38,7 @@ const List<FpTab> fpTabs = [
 
 /// Adaptive scaffold for every screen.
 class FpScaffold extends StatelessWidget {
+  /// Creates a [FpScaffold].
   const FpScaffold({
     required this.body,
     this.title,
@@ -55,7 +61,9 @@ class FpScaffold extends StatelessWidget {
   /// Show a back button (detail screens).
   final bool showBack;
 
+  /// The actions.
   final List<Widget>? actions;
+  /// The floating action button.
   final Widget? floatingActionButton;
 
   @override
@@ -92,7 +100,7 @@ class FpScaffold extends StatelessWidget {
   }
 
   Widget _buildWide(BuildContext context) {
-    final p = AppTheme.palette;
+    const p = AppTheme.palette;
     return Scaffold(
       body: Row(
         children: [
@@ -179,8 +187,10 @@ class FpScaffold extends StatelessWidget {
 
 /// Standard screen padding + scroll + content width.
 class FpScrollBody extends StatelessWidget {
+  /// Creates a [FpScrollBody].
   const FpScrollBody({required this.child, super.key});
 
+  /// The child.
   final Widget child;
 
   @override

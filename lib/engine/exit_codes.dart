@@ -48,5 +48,6 @@ int exitCodeForFindings(Iterable<FindingLike> findings) {
 /// Minimal shape the exit-code derivation needs, so tests can pass
 /// lightweight fakes without building full [Finding] objects.
 abstract class FindingLike {
+  /// Whether this finding blocks the release.
   bool get blocksRelease;
 }

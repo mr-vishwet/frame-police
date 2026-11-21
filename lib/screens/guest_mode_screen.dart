@@ -4,20 +4,22 @@
 /// on-device, and what login adds — only when you want it.
 library;
 
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 import '../core/theme.dart';
 import '../state/app_controller.dart';
 import '../widgets/app_shell.dart';
 import '../widgets/fp_widgets.dart';
 
+/// The guest mode screen screen.
 class GuestModeScreen extends StatelessWidget {
+  /// Creates a [GuestModeScreen].
   const GuestModeScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
     final controller = AppScope.of(context);
-    final p = AppTheme.palette;
+    const p = AppTheme.palette;
     return FpScaffold(
       title: 'Guest mode',
       showBack: true,
@@ -39,20 +41,20 @@ class GuestModeScreen extends StatelessWidget {
                   ?.copyWith(color: p.faint),
             ),
             const SizedBox(height: 14),
-            GlassCard(
+            const GlassCard(
               padding:
-                  const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
+                  EdgeInsets.symmetric(horizontal: 18, vertical: 12),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Kicker('What works'),
-                  const FpRow(
+                  Kicker('What works'),
+                  FpRow(
                     icon: Icons.document_scanner_outlined,
                     title: 'Inspect any export',
                     subtitle: 'Drop in a file — get a verdict.',
                   ),
-                  const Divider(height: 8),
-                  const FpRow(
+                  Divider(height: 8),
+                  FpRow(
                     icon: Icons.article_outlined,
                     title: 'Waivers with reasons',
                     subtitle: 'Waive a finding with a reason; the reason '

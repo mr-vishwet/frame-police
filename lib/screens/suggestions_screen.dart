@@ -4,7 +4,7 @@
 /// suggestions exist is always 0 — by design, not by setting.
 library;
 
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 import '../core/responsive.dart';
 import '../core/theme.dart';
@@ -13,7 +13,9 @@ import '../state/app_controller.dart';
 import '../widgets/app_shell.dart';
 import '../widgets/fp_widgets.dart';
 
+/// The suggestions screen screen.
 class SuggestionsScreen extends StatelessWidget {
+  /// Creates a [SuggestionsScreen].
   const SuggestionsScreen({super.key});
 
   @override
@@ -25,7 +27,7 @@ class SuggestionsScreen extends StatelessWidget {
     final report = reportId == null
         ? controller.currentReport
         : controller.reportById(reportId) ?? controller.currentReport;
-    final p = AppTheme.palette;
+    const p = AppTheme.palette;
     if (report == null) {
       return const FpScaffold(
         title: 'Suggestions',
@@ -155,7 +157,7 @@ class SuggestionsScreen extends StatelessWidget {
   }
 
   Widget _suggestionCard(BuildContext context, Finding suggestion) {
-    final p = AppTheme.palette;
+    const p = AppTheme.palette;
     return GlassCard(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,

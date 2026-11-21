@@ -6,7 +6,7 @@
 /// users land on Home.
 library;
 
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 import 'core/theme.dart';
 import 'screens/account_screen.dart';
@@ -43,40 +43,72 @@ import 'widgets/logo.dart';
 
 /// Named routes — one per screen in the V7 inventory.
 class AppRoutes {
+  /// The home route.
   static const home = '/home';
+  /// The inspect route.
   static const inspect = '/inspect';
+  /// The pre inspection route.
   static const preInspection = '/pre-inspection';
+  /// The inspecting route.
   static const inspecting = '/inspecting';
+  /// The report route.
   static const report = '/report';
+  /// The defect route.
   static const defect = '/defect';
+  /// The autofix route.
   static const autofix = '/autofix';
+  /// The suggestions route.
   static const suggestions = '/suggestions';
+  /// The waiver route.
   static const waiver = '/waiver';
+  /// The report waived route.
   static const reportWaived = '/report-waived';
+  /// The registry route.
   static const registry = '/registry';
+  /// The rule route.
   static const rule = '/rule';
+  /// The history route.
   static const history = '/history';
+  /// The ci route.
   static const ci = '/ci';
+  /// The pr route.
   static const pr = '/pr';
+  /// The ci setup route.
   static const ciSetup = '/ci-setup';
+  /// The export route.
   static const export = '/export';
+  /// The settings route.
   static const settings = '/settings';
+  /// The payoff route.
   static const payoff = '/payoff';
+  /// The welcome route.
   static const welcome = '/welcome';
+  /// The guest route.
   static const guest = '/guest';
+  /// The sign in route.
   static const signIn = '/sign-in';
+  /// The create account route.
   static const createAccount = '/create-account';
+  /// The verify route.
   static const verify = '/verify';
+  /// The upgrade route.
   static const upgrade = '/upgrade';
+  /// The migrate route.
   static const migrate = '/migrate';
+  /// The account route.
   static const account = '/account';
+  /// The connected route.
   static const connected = '/connected';
+  /// The data route.
   static const data = '/data';
 }
 
+/// The frame police app app.
 class FramePoliceApp extends StatefulWidget {
+  /// Creates a [FramePoliceApp].
   const FramePoliceApp({required this.controller, super.key});
 
+  /// The controller.
   final AppController controller;
 
   @override

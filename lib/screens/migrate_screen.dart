@@ -5,7 +5,7 @@
 /// local store.
 library;
 
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 import '../core/constants.dart';
 import '../core/theme.dart';
@@ -13,7 +13,9 @@ import '../state/app_controller.dart';
 import '../widgets/app_shell.dart';
 import '../widgets/fp_widgets.dart';
 
+/// The migrate screen screen.
 class MigrateScreen extends StatelessWidget {
+  /// Creates a [MigrateScreen].
   const MigrateScreen({super.key});
 
   @override
@@ -23,7 +25,7 @@ class MigrateScreen extends StatelessWidget {
     final args =
         ModalRoute.of(context)?.settings.arguments as Map<String, dynamic>?;
     final moved = args?['moveGuestData'] as bool? ?? true;
-    final p = AppTheme.palette;
+    const p = AppTheme.palette;
     return FpScaffold(
       title: 'Moving your data',
       body: FpScrollBody(

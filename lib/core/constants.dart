@@ -13,7 +13,9 @@ const String kRegistryVersion = 'v2.4.1';
 
 /// Number of rules in the registry: 11 defect checks + 3 suggestions.
 const int kRuleCount = 14;
+/// The defect rule count.
 const int kDefectRuleCount = 11;
+/// The suggestion rule count.
 const int kSuggestionRuleCount = 3;
 
 /// ---------------------------------------------------------------------------
@@ -59,20 +61,32 @@ const int kMinWaiverChars = 20;
 
 /// Defect rules (these decide the exit code).
 const String kRuleSubtitleSafeArea = 'SUB-SAFE-01';
+/// The audio peak rule code.
 const String kRuleAudioPeak = 'AUD-PEAK-02';
+/// The aspect ratio rule code.
 const String kRuleAspectRatio = 'ASP-RATIO-01';
+/// The black frames rule code.
 const String kRuleBlackFrames = 'BLACK-FR-01';
+/// The text overflow rule code.
 const String kRuleTextOverflow = 'TXT-OVER-01';
+/// The brand logo rule code.
 const String kRuleBrandLogo = 'BRAND-LOGO-01';
+/// The brand color rule code.
 const String kRuleBrandColor = 'BRAND-COL-01';
+/// The caption sync rule code.
 const String kRuleCaptionSync = 'CAP-SYNC-01';
+/// The title safe area rule code.
 const String kRuleTitleSafeArea = 'TITLE-SAFE-01';
+/// The frame rate rule code.
 const String kRuleFrameRate = 'FRAMERATE-01';
+/// The min resolution rule code.
 const String kRuleMinResolution = 'RES-MIN-01';
 
 /// Suggestion rules (opinions with evidence — never blocking).
 const String kRuleLoudness = 'SUG-LOUD-01';
+/// The opening frame rule code.
 const String kRuleOpeningFrame = 'SUG-OPEN-01';
+/// The captions file rule code.
 const String kRuleCaptionsFile = 'SUG-CAP-01';
 
 /// ---------------------------------------------------------------------------
@@ -82,21 +96,34 @@ const String kRuleCaptionsFile = 'SUG-CAP-01';
 class DemoFixture {
   /// The demo export: Launch Teaser v3, 00:47, 1080x1920, 86.4 MB.
   static const String teaserName = 'Launch Teaser — v3.mp4';
+  /// The teaser duration in seconds.
   static const int teaserDurationSeconds = 47;
+  /// The teaser frames.
   static const int teaserFrames = 1128;
+  /// The teaser width.
   static const int teaserWidth = 1080;
+  /// The teaser height.
   static const int teaserHeight = 1920;
+  /// The teaser fps.
   static const int teaserFps = 24;
+  /// The teaser size in bytes.
   static const int teaserSizeBytes = 86400000;
 
   /// The two demo defects, with their canonical evidence.
   static const String subtitleTimecode = '00:00:12:08';
+  /// The subtitle bottom y.
   static const double subtitleBottomY = 1066;
+  /// The subtitle limit y.
   static const double subtitleLimitY = 1052;
+  /// The subtitle fixed y.
   static const double subtitleFixedY = 1040;
+  /// The peak timecode.
   static const String peakTimecode = '00:00:31:22';
+  /// The peak dbfs.
   static const double peakDbfs = -0.8;
+  /// The peak limit dbfs.
   static const double peakLimitDbfs = -1.0;
+  /// The peak fixed dbfs.
   static const double peakFixedDbfs = -1.4;
 
   /// The demo waiver reason (108 characters).
@@ -110,14 +137,18 @@ class DemoFixture {
   /// Seeded CI totals. The recent-run list is stored alongside; counts
   /// move when a real local run appends (e.g. the payoff run #249).
   static const int ciTotalRuns = 248;
+  /// The ci failed runs.
   static const int ciFailedRuns = 31;
+  /// The ci clean runs.
   static const int ciCleanRuns = 217;
 
   /// The demo PR at the top of the CI list.
   static const int demoPrNumber = 142;
+  /// The demo run number.
   static const int demoRunNumber = 248;
 
   /// Seeded lifetime totals shown on Home and Account.
   static const int defectsCaught = 47;
+  /// The zero defect exports.
   static const int zeroDefectExports = 12;
 }

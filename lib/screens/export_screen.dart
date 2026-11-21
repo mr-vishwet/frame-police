@@ -5,7 +5,7 @@
 /// with its reason. On web the formats sit beside the inclusions list.
 library;
 
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter/services.dart';
 
 import '../core/responsive.dart';
@@ -16,7 +16,9 @@ import '../state/app_controller.dart';
 import '../widgets/app_shell.dart';
 import '../widgets/fp_widgets.dart';
 
+/// The export screen screen.
 class ExportScreen extends StatefulWidget {
+  /// Creates an [ExportScreen].
   const ExportScreen({super.key});
 
   @override
@@ -36,7 +38,7 @@ class _ExportScreenState extends State<ExportScreen> {
     final report = reportId == null
         ? controller.currentReport
         : controller.reportById(reportId) ?? controller.currentReport;
-    final p = AppTheme.palette;
+    const p = AppTheme.palette;
     if (report == null) {
       return const FpScaffold(
         title: 'Export',
@@ -79,11 +81,19 @@ class _ExportScreenState extends State<ExportScreen> {
               left: GlassCard(
                 padding: const EdgeInsets.symmetric(
                     horizontal: 18, vertical: 8),
-                child: Column(
-                  children: [
-                    for (final format in ReportFormat.values)
-                      _formatRow(context, report, format),
-                  ],
+                child: RadioGroup<ReportFormat>(
+                  groupValue: _format,
+                  onChanged: (value) {
+                    if (value != null) {
+                      setState(() => _format = value);
+                    }
+                  },
+                  child: Column(
+                    children: [
+                      for (final format in ReportFormat.values)
+                        _formatRow(context, report, format),
+                    ],
+                  ),
                 ),
               ),
               right: Column(
@@ -177,7 +187,7 @@ class _ExportScreenState extends State<ExportScreen> {
     Report report,
     ReportFormat format,
   ) {
-    final p = AppTheme.palette;
+    const p = AppTheme.palette;
     final icon = switch (format) {
       ReportFormat.html => Icons.language_outlined,
       ReportFormat.json => Icons.data_object_outlined,
@@ -236,8 +246,6 @@ class _ExportScreenState extends State<ExportScreen> {
             const SizedBox(width: 8),
             Radio<ReportFormat>(
               value: format,
-              groupValue: _format,
-              onChanged: (_) => setState(() => _format = format),
               activeColor: p.amber,
             ),
           ],

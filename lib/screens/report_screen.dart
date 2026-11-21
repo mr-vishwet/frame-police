@@ -5,7 +5,7 @@
 /// verdict sits beside the marker tracks and defects.
 library;
 
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 import '../core/format.dart';
 import '../core/responsive.dart';
@@ -16,7 +16,9 @@ import '../widgets/app_shell.dart';
 import '../widgets/fp_widgets.dart';
 import '../widgets/waveform.dart';
 
+/// The report screen screen.
 class ReportScreen extends StatelessWidget {
+  /// Creates a [ReportScreen].
   const ReportScreen({super.key});
 
   @override
@@ -28,7 +30,7 @@ class ReportScreen extends StatelessWidget {
     final report = reportId == null
         ? controller.currentReport
         : controller.reportById(reportId) ?? controller.currentReport;
-    final p = AppTheme.palette;
+    const p = AppTheme.palette;
     if (report == null) {
       return const FpScaffold(
         title: 'Report',
@@ -267,7 +269,7 @@ class ReportScreen extends StatelessWidget {
     Report report,
     Finding finding,
   ) {
-    final p = AppTheme.palette;
+    const p = AppTheme.palette;
     final color = switch (finding.status) {
       FindingStatus.open => p.red,
       FindingStatus.fixed => p.green,

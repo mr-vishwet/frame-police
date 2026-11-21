@@ -25,8 +25,10 @@ import 'models.dart';
 /// Thrown when an inspection cannot run (unreadable file, probe failure,
 /// registry mismatch). Maps to exit code 2 — distinct from a defect.
 class InspectionException implements Exception {
+  /// Creates an [InspectionException].
   InspectionException(this.message);
 
+  /// The message.
   final String message;
 
   @override
@@ -46,6 +48,7 @@ const double kSilenceLimitSeconds = 1.5;
 /// Loudness deviation from target that earns a suggestion (SUG-LOUD-01).
 const double kLoudnessToleranceLufs = 0.5;
 
+/// Inspector.
 class Inspector {
   Inspector._();
 

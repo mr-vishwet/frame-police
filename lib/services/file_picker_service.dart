@@ -16,6 +16,7 @@ import 'package:file_picker/file_picker.dart';
 import '../engine/inspector.dart';
 import '../engine/models.dart';
 
+/// File picker service.
 class FilePickerService {
   /// Picks one video file and builds an [ExportFile] for it with a
   /// deterministic demo probe. Returns null when the user cancels.

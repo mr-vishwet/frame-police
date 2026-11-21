@@ -14,6 +14,7 @@ import 'package:file_picker/file_picker.dart';
 import '../engine/models.dart';
 import '../engine/reporter.dart';
 
+/// Report export service.
 class ReportExportService {
   /// Saves [content] as [fileName] via the system save dialog (native)
   /// or a browser download (web). Returns the saved path, or null when

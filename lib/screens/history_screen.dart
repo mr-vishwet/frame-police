@@ -5,7 +5,7 @@
 /// beside the list.
 library;
 
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 import '../core/format.dart';
 import '../core/responsive.dart';
@@ -16,13 +16,15 @@ import '../widgets/app_shell.dart';
 import '../widgets/fp_widgets.dart';
 import '../widgets/score_bars.dart';
 
+/// The history screen screen.
 class HistoryScreen extends StatelessWidget {
+  /// Creates a [HistoryScreen].
   const HistoryScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
     final controller = AppScope.of(context);
-    final p = AppTheme.palette;
+    const p = AppTheme.palette;
     final reports = controller.reports;
     final scores = controller.recentScores;
     final average = scores.isEmpty
@@ -40,7 +42,7 @@ class HistoryScreen extends StatelessWidget {
     return FpScaffold(
       title: 'History',
       showBack: true,
-      actions: [Center(child: Tag('Score / 100'))],
+      actions: const [Center(child: Tag('Score / 100'))],
       body: FpScrollBody(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -128,7 +130,7 @@ class HistoryScreen extends StatelessWidget {
   }
 
   Widget _historyRow(BuildContext context, Report report) {
-    final p = AppTheme.palette;
+    const p = AppTheme.palette;
     final open = report.openDefects.length;
     final meta = report.isClean
         ? 'Clean'

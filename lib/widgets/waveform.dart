@@ -7,13 +7,14 @@ library;
 
 import 'dart:math' as math;
 
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 import '../core/theme.dart';
 
 /// A deterministic waveform. [peakAt] (0..1) places the over-limit peak;
 /// [cap] clamps the amplitude for the after-fix waveform.
 class WaveformView extends StatelessWidget {
+  /// Creates a [WaveformView].
   const WaveformView({
     required this.seed,
     this.height = 64,
@@ -24,16 +25,22 @@ class WaveformView extends StatelessWidget {
     super.key,
   });
 
+  /// The seed.
   final int seed;
+  /// The height.
   final double height;
+  /// Where the over-limit peak sits (0..1).
   final double? peakAt;
+  /// The cap.
   final double cap;
+  /// The color.
   final Color? color;
+  /// Whether to show the limit line.
   final bool showLimit;
 
   @override
   Widget build(BuildContext context) {
-    final p = AppTheme.palette;
+    const p = AppTheme.palette;
     return SizedBox(
       height: height,
       child: CustomPaint(
@@ -131,6 +138,7 @@ class _WaveformPainter extends CustomPainter {
 /// Marker tracks: a timeline strip with defect markers at their
 /// timecodes.
 class MarkerTracks extends StatelessWidget {
+  /// Creates a [MarkerTracks].
   const MarkerTracks({
     required this.durationSeconds,
     required this.markers,
@@ -138,15 +146,17 @@ class MarkerTracks extends StatelessWidget {
     super.key,
   });
 
+  /// The duration in seconds.
   final int durationSeconds;
 
   /// (timecodeSeconds, label, isDefect) markers.
   final List<(double, String, bool)> markers;
+  /// The height.
   final double height;
 
   @override
   Widget build(BuildContext context) {
-    final p = AppTheme.palette;
+    const p = AppTheme.palette;
     return SizedBox(
       height: height + 18,
       child: LayoutBuilder(

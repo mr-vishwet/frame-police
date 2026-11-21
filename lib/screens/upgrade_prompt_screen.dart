@@ -5,7 +5,7 @@
 /// On web the two panels sit side by side.
 library;
 
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 import '../core/responsive.dart';
 import '../core/theme.dart';
@@ -13,14 +13,16 @@ import '../state/app_controller.dart';
 import '../widgets/app_shell.dart';
 import '../widgets/fp_widgets.dart';
 
+/// The upgrade prompt screen screen.
 class UpgradePromptScreen extends StatelessWidget {
+  /// Creates an [UpgradePromptScreen].
   const UpgradePromptScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
     final controller = AppScope.of(context);
     final report = controller.currentReport;
-    final p = AppTheme.palette;
+    const p = AppTheme.palette;
     return FpScaffold(
       title: 'CI integration',
       showBack: true,

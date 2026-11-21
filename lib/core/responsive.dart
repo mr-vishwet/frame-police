@@ -8,7 +8,7 @@
 /// responsive routes — see README "Screens".
 library;
 
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 /// Width at or above which the web layout applies.
 const double kWideBreakpoint = 720;
@@ -26,8 +26,10 @@ bool isWide(BuildContext context) =>
 /// Centres [child] and constrains its width: [kMaxNarrowWidth] on
 /// mobile, [kMaxContentWidth] on web.
 class ContentWidth extends StatelessWidget {
+  /// Creates a [ContentWidth].
   const ContentWidth({required this.child, super.key});
 
+  /// The child.
   final Widget child;
 
   @override
@@ -49,6 +51,7 @@ class ContentWidth extends StatelessWidget {
 /// [leftFlex] / [rightFlex] control the wide split; [gap] separates the
 /// columns (and the stacked sections on mobile).
 class AdaptiveColumns extends StatelessWidget {
+  /// Creates an [AdaptiveColumns].
   const AdaptiveColumns({
     required this.left,
     required this.right,
@@ -58,10 +61,15 @@ class AdaptiveColumns extends StatelessWidget {
     super.key,
   });
 
+  /// The left.
   final Widget left;
+  /// The right.
   final Widget right;
+  /// The left flex.
   final int leftFlex;
+  /// The right flex.
   final int rightFlex;
+  /// The gap.
   final double gap;
 
   @override
@@ -86,6 +94,7 @@ class AdaptiveColumns extends StatelessWidget {
 /// A grid that shows [wideColumns] on wide screens and [narrowColumns]
 /// on narrow screens.
 class AdaptiveGrid extends StatelessWidget {
+  /// Creates an [AdaptiveGrid].
   const AdaptiveGrid({
     required this.children,
     this.narrowColumns = 2,
@@ -94,9 +103,13 @@ class AdaptiveGrid extends StatelessWidget {
     super.key,
   });
 
+  /// The children.
   final List<Widget> children;
+  /// The narrow columns.
   final int narrowColumns;
+  /// The wide columns.
   final int wideColumns;
+  /// The gap.
   final double gap;
 
   @override

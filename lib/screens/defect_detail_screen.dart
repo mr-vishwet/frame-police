@@ -6,7 +6,7 @@
 /// and the two decisions — Auto-fix, or Waive with reason.
 library;
 
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 import '../core/constants.dart';
 import '../core/responsive.dart';
@@ -18,7 +18,9 @@ import '../widgets/fp_widgets.dart';
 import '../widgets/frame_mock.dart';
 import '../widgets/waveform.dart';
 
+/// The defect detail screen screen.
 class DefectDetailScreen extends StatelessWidget {
+  /// Creates a [DefectDetailScreen].
   const DefectDetailScreen({super.key});
 
   @override
@@ -31,7 +33,7 @@ class DefectDetailScreen extends StatelessWidget {
     final report = reportId == null
         ? controller.currentReport
         : controller.reportById(reportId) ?? controller.currentReport;
-    final p = AppTheme.palette;
+    const p = AppTheme.palette;
     Finding? finding;
     if (report != null && findingId != null) {
       for (final f in report.defects) {
@@ -223,7 +225,7 @@ class DefectDetailScreen extends StatelessWidget {
   }
 
   Widget _statusTag(BuildContext context, Finding finding) {
-    final p = AppTheme.palette;
+    const p = AppTheme.palette;
     return switch (finding.status) {
       FindingStatus.open => Tag(
           finding.ruleCode == kRuleSubtitleSafeArea
@@ -243,7 +245,7 @@ class DefectDetailScreen extends StatelessWidget {
   }
 
   Widget _beforeAfter(BuildContext context, Finding finding) {
-    final p = AppTheme.palette;
+    const p = AppTheme.palette;
     if (finding.ruleCode == kRuleSubtitleSafeArea) {
       return Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -312,7 +314,7 @@ class DefectDetailScreen extends StatelessWidget {
                   ],
                 ),
                 const SizedBox(height: 10),
-                WaveformView(
+                const WaveformView(
                   seed: 7,
                   height: 56,
                   peakAt: 0.66,
