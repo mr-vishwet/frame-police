@@ -167,45 +167,62 @@ class AppController extends ChangeNotifier {
   // -- init / seeding ---------------------------------------------------
 
   /// Loads persisted state, seeding demo data on first launch.
+  ///
+  /// Never throws: on any storage or seeding failure the app falls back
+  /// to in-memory demo state and still marks itself initialized. The
+  /// whole UI is gated on [initialized] (see `app.dart`), so a
+  /// persistence failure — e.g. web storage unavailable or a stored
+  /// value that no longer decodes — must never strand the app on the
+  /// splash screen.
   Future<void> init() async {
     if (_initialized) return;
-    final seeded = await _store.isSeeded();
-    onboarded = await _store.isOnboarded();
-    settings = await _store.loadSettings() ?? const AppSettings();
-    account = await _store.loadAccount();
-    if (!seeded) {
-      exports = demoExports();
-      reports = demoHistoryReports();
-      rules = defaultRules();
-      ciRuns = demoCiRuns();
-      ciTotals = const [
-        DemoFixture.ciTotalRuns,
-        DemoFixture.ciFailedRuns,
-        DemoFixture.ciCleanRuns,
-      ];
-      defectsCaught = DemoFixture.defectsCaught;
-      zeroDefectExports = DemoFixture.zeroDefectExports;
-      await _persistAll();
-      await _store.setSeeded(true);
-    } else {
-      exports = await _store.loadExports() ?? demoExports();
-      reports = await _store.loadReports() ?? [];
-      rules = await _store.loadRules() ?? defaultRules();
-      ciRuns = await _store.loadCiRuns() ?? demoCiRuns();
-      ciTotals = await _store.loadCiTotals() ??
-          const [
-            DemoFixture.ciTotalRuns,
-            DemoFixture.ciFailedRuns,
-            DemoFixture.ciCleanRuns,
-          ];
-      final counters = await _store.loadCounters();
-      defectsCaught = counters[0];
-      zeroDefectExports = counters[1];
+    try {
+      final seeded = await _store.isSeeded();
+      onboarded = await _store.isOnboarded();
+      settings = await _store.loadSettings() ?? const AppSettings();
+      account = await _store.loadAccount();
+      if (!seeded) {
+        exports = demoExports();
+        reports = demoHistoryReports();
+        rules = defaultRules();
+        ciRuns = demoCiRuns();
+        ciTotals = const [
+          DemoFixture.ciTotalRuns,
+          DemoFixture.ciFailedRuns,
+          DemoFixture.ciCleanRuns,
+        ];
+        defectsCaught = DemoFixture.defectsCaught;
+        zeroDefectExports = DemoFixture.zeroDefectExports;
+        await _persistAll();
+        await _store.setSeeded(true);
+      } else {
+        exports = await _store.loadExports() ?? demoExports();
+        reports = await _store.loadReports() ?? [];
+        rules = await _store.loadRules() ?? defaultRules();
+        ciRuns = await _store.loadCiRuns() ?? demoCiRuns();
+        ciTotals = await _store.loadCiTotals() ??
+            const [
+              DemoFixture.ciTotalRuns,
+              DemoFixture.ciFailedRuns,
+              DemoFixture.ciCleanRuns,
+            ];
+        final counters = await _store.loadCounters();
+        defectsCaught = counters[0];
+        zeroDefectExports = counters[1];
+      }
+    } on Object catch (_) {
+      // Storage unavailable or stored data unreadable: run with
+      // in-memory demo state so the app can still start.
+      if (exports.isEmpty) exports = demoExports();
+      if (reports.isEmpty) reports = demoHistoryReports();
+      if (rules.isEmpty) rules = defaultRules();
+      if (ciRuns.isEmpty) ciRuns = demoCiRuns();
+    } finally {
+      selectedExport = exports.isNotEmpty ? exports.first : null;
+      currentReport = reports.isNotEmpty ? reports.first : null;
+      _initialized = true;
+      notifyListeners();
     }
-    selectedExport = exports.isNotEmpty ? exports.first : null;
-    currentReport = reports.isNotEmpty ? reports.first : null;
-    _initialized = true;
-    notifyListeners();
   }
 
   Future<void> _persistAll() async {
