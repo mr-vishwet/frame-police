@@ -74,7 +74,6 @@ class ReportExportService {
       exports.map((e) => e.toJson()).toList(),
     );
     final zipBytes = ZipEncoder().encode(archive);
-    if (zipBytes == null) return null;
     return FilePicker.platform.saveFile(
       dialogTitle: 'Export everything',
       fileName: 'frame-police-export.zip',

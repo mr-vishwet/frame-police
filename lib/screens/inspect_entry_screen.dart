@@ -132,7 +132,6 @@ class _InspectEntryScreenState extends State<InspectEntryScreen> {
     ExportFile export,
   ) {
     final p = AppTheme.palette;
-    final isSelected = controller.selectedExport?.id == export.id;
     final isKnownBad = export.id == 'exp_known_bad';
     return InkWell(
       onTap: () => controller.selectExport(export),
