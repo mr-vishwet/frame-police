@@ -288,4 +288,5 @@ jobs:
 
 Run #5's Pages deploy failed on GitHub's side (artifact fetch error),
 and re-running the failed job failed again (duplicate artifact). This
-commit re-triggers a fresh workflow run.
+commit re-triggers a fresh workflow run. Run #7 (commit b81624e) hit
+the same artifact fetch error again — re-triggered the same way.
