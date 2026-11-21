@@ -75,7 +75,8 @@ void main() {
   group('Markdown', () {
     test('carries verdict, registry, defects, and waiver', () {
       final md = Reporter.toMarkdown(report);
-      expect(md, contains('exit code 1'));
+      expect(md, contains('(exit 1)'));
+      expect(md, contains('| Exit code | **1**'));
       expect(md, contains(kRegistryVersion));
       expect(md, contains('SUB-SAFE-01'));
       expect(md, contains('AUD-PEAK-02'));

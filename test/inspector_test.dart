@@ -274,7 +274,7 @@ void main() {
       );
       expect(second.exitCode, kExitDefects);
       expect(
-        second.findings
+        second.defects
             .where((f) => f.status == FindingStatus.open)
             .length,
         2,
