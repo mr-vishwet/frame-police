@@ -25,8 +25,14 @@ enum FindingKind { defect, suggestion }
 enum FindingStatus { open, fixed, confirmed, waived }
 
 /// A creative export to inspect (a video file in v0.1).
+///
+/// The constructor is deliberately NOT const: the `declaredAspect`
+/// default calls [_aspectOf], a static method invocation, which is not
+/// a constant expression — a const constructor cannot have it in its
+/// initializer list. No call site constructs an [ExportFile] in a
+/// const context, so dropping `const` changes nothing else.
 class ExportFile {
-  const ExportFile({
+  ExportFile({
     required this.id,
     required this.name,
     required this.durationSeconds,

@@ -47,6 +47,9 @@ class PrCommentScreen extends StatelessWidget {
     for (final r in controller.reports) {
       if (r.exportName == run.exportName) report = r;
     }
+    // Final local: `report` is mutable, so its null check does not
+    // promote inside the button closure below — capture the id first.
+    final reportId = report?.id;
     final defects = report?.defects ?? _demoDefects(run);
     final suggestions = report?.suggestions ?? _demoSuggestions(run);
     final score = report?.score ?? 82;
@@ -198,12 +201,12 @@ class PrCommentScreen extends StatelessWidget {
                       Expanded(
                         child: FpGhostButton(
                           label: 'View full report',
-                          onPressed: report == null
+                          onPressed: reportId == null
                               ? null
                               : () => Navigator.pushNamed(
                                     context,
                                     '/report',
-                                    arguments: {'reportId': report.id},
+                                    arguments: {'reportId': reportId},
                                   ),
                         ),
                       ),

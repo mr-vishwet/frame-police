@@ -1,5 +1,3 @@
-import 'package:flutter/material.dart';
-
 /// Responsive helpers: one codebase, one route per screen, two layouts.
 ///
 /// The V7 inventory has 30 mobile screens + 30 web screens. In Flutter
@@ -9,6 +7,8 @@ import 'package:flutter/material.dart';
 /// wider max width). All 60 inventory screens are covered by the 30
 /// responsive routes — see README "Screens".
 library;
+
+import 'package:flutter/material.dart';
 
 /// Width at or above which the web layout applies.
 const double kWideBreakpoint = 720;
