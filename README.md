@@ -1,43 +1,56 @@
-# Frame Police
+<p align="left">
+  <img src="docs/screenshots/app-icon.png" width="96" alt="FRAME POLICE app icon — amber frame corners on a near-black tile">
+</p>
 
-**A design-system linter for creative exports.** A rule engine checks
-designs and frames against a design system — spacing, type, colour,
-radius, component usage, and (for video exports) subtitle safe area,
-aspect ratio, audio peak/silence, black frames, and brand checks —
-reports violations with severity, and runs in CI with exit codes.
-**The exit code is the verdict.**
+# FRAME POLICE
 
-> **v0.1 — started, not finished.** The rule engine is real and tested
-> end-to-end (see [Verification](#verification)): 14 versioned rules,
-> deterministic inspections, one-tap auto-fix with before/after
-> previews, waivers with reasons, four report formats, and the full CI
-> exit-code contract. All 30 screens exist as functional routes (mobile
-> + web layouts from one codebase). The native media probe (decoding
-> real video frames and audio), the GitHub Action, and backend sync are
-> phase-2 items, listed in [Roadmap](#roadmap).
+**A linter for video.** It inspects a finished export before it ships — subtitles, audio, frames, text, brand — and answers one question with an exit code: *is this safe to publish?*
+
+👉 **[Try the live demo](https://mr-vishwet.github.io/frame-police/)**
+
+---
+
+## The idea
+
+Machine-checkable defects ship anyway, because nobody runs the checks.
+
+A subtitle sits below the safe area and gets cropped on some players. An audio peak clips. A few black frames slip into the middle of a cut. Text overflows the frame. The brand mark is missing from the export that went to a client. Every one of these is checkable by a machine — and every one of them is still usually caught by a human, after publishing, when it's embarrassing.
+
+Code solved this years ago: linters check every change, and CI refuses to merge what fails. Video exports never got the same treatment. FRAME POLICE is that treatment. Pick an export, and fourteen versioned rules inspect it in seconds. The report separates real defects from mere suggestions, shows the evidence for every finding, and ends in a verdict a pipeline can read: exit 0 means ship it, exit 1 means defects found. The exit code is the verdict — not a vibe, not a review meeting, a number.
+
+The insight that shapes the whole product: **defects and suggestions are separate universes.** A suggestion — loudness could be closer to target, the opening frame is dark — is an opinion, and an opinion must never block a release. The moment an opinion blocks CI, the product has lied. So suggestions never touch the exit code, the score, or anything a pipeline reads. Defects decide. Suggestions advise. That line is the product.
 
 ## What it does
 
-1. **Inspect** — pick an export. Fourteen checks run on-device: 11
-   defect checks that decide the exit code, 3 suggestions that never do.
-   Nothing uploads.
-2. **Verdict** — the report: exit code, score, marker tracks, and every
-   finding with its evidence (timecode, measured value, limit). Score is
-   illustrative; the exit code is the verdict.
-3. **Fix** — one-tap auto-fix for every defect, previewed before/after
-   inline. A fix is not real until re-inspection confirms it: the exit
-   code stays 1 until then.
-4. **Waive** — override a defect with a reason (minimum 20 characters).
-   The reason stays in the report. Waiving never deletes the finding.
-5. **Ship** — re-inspect. Exit 0, score 100, the waiver still on
-   record, the PR unblocked. Export the report as HTML, JSON, Markdown,
-   or TTY.
+### Inspect
 
-## The rules
+Pick an export and fourteen checks run against it: 11 defect checks that decide the verdict, and 3 suggestions that never do. The checks run on the device — nothing uploads. Before the run, the app shows the file's facts and the rule registry version pinned to the inspection, so a report always says exactly which rules ran it.
 
-Registry **v2.4.1** — 14 versioned rules. A report records the registry
-version that ran it; same input + same rules = same report. Editing a
-rule's limit creates a new rule version — history is never rewritten.
+### The verdict
+
+The report is the heart of the app: an exit code, a score out of 100, marker tracks showing where each finding sits on the timeline, and every finding with its evidence — the timecode, the measured value, and the limit it broke. The score is a guide; the exit code is the verdict.
+
+| Exit code | Meaning |
+|---|---|
+| `0` | Clean — no open defects. Ship it. |
+| `1` | Defects found — one or more open defects. Don't ship it yet. |
+| `2` | Inspection error — the file couldn't be read, or the inspection itself failed. An error is not a defect, and the report says so. |
+
+### The demo reel
+
+The demo ships with a reel built to fail: **known-bad.mp4** — 32 seconds, 1080×1920. It inspects in about 19 seconds and comes back with **5 defects and a score of 55**:
+
+- **SUB-SAFE-01 — Subtitle below the safe area.** A subtitle sits below the 90% safe margin, where players can crop it.
+- **AUD-PEAK-02 — Audio peak over the limit.** A peak hits above the −1.0 dBFS ceiling.
+- **BLACK-FR-01 — Black frames.** Frames in the cut that are entirely black.
+- **TXT-OVER-01 — Text overflow.** On-screen text running past the edge of the frame.
+- **BRAND-LOGO-01 — Missing brand mark.** The export carries no brand mark at all.
+
+Each finding opens into a detail screen with before/after evidence — the frame as it is, the frame as it should be — so you see the defect, not just its name.
+
+### The rules
+
+The rule registry is versioned — currently **v2.4.1**, 14 rules. A report records the registry version that ran it, so the same export under the same rules always produces the same report. Editing a rule's limit creates a new version of that rule; history is never rewritten.
 
 | Code | Rule | Kind | Limit |
 |---|---|---|---|
@@ -56,237 +69,44 @@ rule's limit creates a new rule version — history is never rewritten.
 | SUG-OPEN-01 | Opening frame brightness | Suggestion | < 50% dark |
 | SUG-CAP-01 | Captions file attached | Suggestion | .srt attached |
 
-Defects and suggestions are **separate universes**: suggestions never
-affect the exit code, the score, or anything CI reads. The moment an
-opinion blocks CI, the product has lied.
+Every rule can be browsed in the registry, opened for its detail and version history, and enabled or disabled. The registry screen makes the whole system legible: every rule, versioned, in one place.
 
-## CI exit-code contract
+### Fix
 
-CI reads **only** the exit code. This contract is enforced by the
-inspector (`lib/engine/exit_codes.dart`), shown on the CI setup screen,
-and tested (`test/exit_codes_test.dart`, `test/inspector_test.dart`).
+FRAME POLICE is a linter that fixes, not just one that complains. Every defect has a one-tap auto-fix, previewed before and after inline: SUB-SAFE-01 nudges the subtitle back up into the safe area; AUD-PEAK-02 applies a limiter to tame the peak. But a fix is not real until re-inspection confirms it — the exit code stays 1 until the fixed export passes the checks again. A fix that doesn't hold re-opens the defect.
 
-| Exit code | Meaning | CI behaviour |
-|---|---|---|
-| `0` | Clean — no open defects | Check passes. The PR may merge. |
-| `1` | Defects — one or more open defects | Check fails. The PR is blocked until the check passes. |
-| `2` | Inspection error (unreadable file, probe failure, registry mismatch) | Check fails (error, not a defect). Re-run the inspection. |
+### Waive
 
-Rules of the contract:
+Sometimes a defect is deliberate — a client approved the lower-third placement, a platform's safe area differs. Any defect can be waived with a reason (at least 20 characters), and the reason stays in the report. Waiving never deletes the finding: the report shows what was waived, why, and by whom. Waived defects don't block the verdict — the exit code reads 0 once everything open is either fixed-and-confirmed or waived-with-a-reason.
 
-- **Open** defects yield 1. **Fixed-but-unconfirmed** defects also
-  yield 1 — a fix is not real until re-inspection confirms it.
-- **Waived** defects yield 0 (the waiver + reason stay in the report).
-- **Confirmed** fixes yield 0.
-- **Suggestions** never affect the exit code — by design, not by setting.
-- Exit 2 is distinct from exit 1: an error is not a defect, and CI
-  should say so.
+### Ship
 
-### GitHub Action (proposed integration)
+Re-inspect, and a clean export lands on exit 0, score 100, the waiver still on record. The report can be exported in four formats — a readable page, structured data, plain text for pasting, and a terminal view — each carrying the same verdict, the same registry version, and the same waiver reasons.
 
-The workflow is eleven lines — see the CI setup screen in the app, or
-the [appendix](#appendix-github-action-workflow) for the YAML to add
-via the GitHub web UI. The Action (`frame-police/action@v2`) is a
-proposed integration in this Build Specification; the app ships the
-contract, the workflow text, and the seeded demo CI runs, not the
-Action itself.
+### In the pipeline
 
-## Screens
+The same verdict travels into CI. The inspector runs on every pull request that touches an export; the check reads only the exit code, and a failing check blocks the merge until the export passes. The pull request gets a comment with the verdict — defects listed, evidence linked, merge blocked or cleared. Quality history tracks scores across inspections, so a team can see whether exports are getting cleaner over time.
 
-30 routes, each responsive: below 720 px the mobile layout (single
-column, bottom tab bar), at or above 720 px the web layout (side
-navigation, two-column content). That covers all 60 screens of the V7
-inventory (30 mobile + 30 web) from one codebase.
+### Guest-first
 
-| # | Route | Screen |
-|---|---|---|
-| 01 | `/home` | Home — latest report, quality chart, totals |
-| 02 | `/inspect` | Pick an export |
-| 03 | `/pre-inspection` | File facts, pinned registry, checks queued |
-| 04 | `/inspecting` | Live run — progress, probes, cancel |
-| 05 | `/report` | Verdict — exit code, marker tracks, defects |
-| 06–07 | `/defect` | Defect detail — before/after, evidence, fix / waive |
-| 08 | `/autofix` | Fixed in one tap — fix list, re-inspect |
-| 09 | `/suggestions` | Suggestions, never blocking |
-| 10 | `/waiver` | Waiver sheet — reason required, stays on record |
-| 11 | `/report-waived` | Report, waived — exit 1 until re-inspection |
-| 12 | `/registry` | Rule registry — search, filter, enable/disable |
-| 13 | `/rule` | Rule detail — editable limit, version history |
-| 14 | `/history` | Quality history — chart, averages, inspections |
-| 15 | `/ci` | CI runs — totals, recent runs, contract |
-| 16 | `/pr` | PR comment — the bot's check, merge block |
-| 17 | `/ci-setup` | CI setup — workflow YAML, connect Action |
-| 18 | `/export` | Export report — HTML / JSON / Markdown / TTY |
-| 19 | `/settings` | Checks, CI, account, about |
-| 20 | `/payoff` | Exit 0 — ship it |
-| 21 | `/welcome` | Welcome — guest-first, no account needed |
-| 22 | `/guest` | Guest mode, explained |
-| 23 | `/sign-in` | Sign in — join the team registry |
-| 24 | `/create-account` | Create account — move guest data in |
-| 25 | `/verify` | Verify — magic link or 6-digit code |
-| 26 | `/upgrade` | CI needs an account — the PR it would unblock |
-| 27 | `/migrate` | Migration — nothing lost, verified item by item |
-| 28 | `/account` | Account home — synced counts, registry, devices |
-| 29 | `/connected` | Connected accounts — CI, registry, devices |
-| 30 | `/data` | Data controls — export everything, sign out, delete |
+No account is needed to inspect. The full inspector — checks, reports, fixes, waivers, history — works as a guest, with everything staying on the device. Signing in adds the team side: one shared registry across devices, shared waivers, and the CI connection. Guest data moves into the account when you sign in, verified item by item, nothing lost.
 
-## Honest limits
+### About the demo
 
-Read this before quoting any number from the demo:
+The inspection in this demo is a labelled demo inspection: the demo reel carries measured values, and files you pick yourself get a deterministic demo probe — the report says so wherever it shows. What the demo shows in full is the product itself: the rules, the verdict, the fixes, the waivers, and the exit-code contract. The numbers inside the demo (sample exports, past inspections, CI runs) are seeded demo content, not measured usage.
 
-- **The demo numbers are a story, not measurements.** Launch Teaser
-  v3 (00:47, 1,128 frames, score 82, exit 1), PR #142, 248 CI runs, 47
-  defects caught — these are seeded demo content from the V7 design,
-  labelled DEMO wherever they show. They are never presented as
-  measured usage, and no dates, user counts, or shipped claims are
-  invented anywhere in the app.
-- **v0.1 does not decode media.** The rule engine evaluates probe data
-  (subtitle positions, peak levels, frame counts). Seeded demo exports
-  carry measured probe values; user-picked files get a deterministic
-  demo probe derived from the file's name and size — labelled DEMO in
-  the report. The native media probe (frame/audio decode) is the phase-2
-  milestone; the engine, scoring, waivers, and exit-code mapping it
-  feeds on are complete and tested.
-- **Auto-fix operates on probe data and metadata**, not media bytes:
-  the working copy's probe values are adjusted to their post-fix
-  values and re-inspection confirms them. Real media rewriting (moving
-  a subtitle in the file, applying a limiter to the audio) is phase 2.
-- **Auth is local-only in v0.1.** There is no backend: sign-in creates
-  a local profile, verification accepts any 6-digit code (the screen
-  says so), and "sync" is a local migration of guest data. The session
-  token lives in secure storage. Real backend sync is phase 2.
-- **CI runs are seeded demo data** until the Action is connected, and
-  the Action itself is a proposed integration (see the appendix).
-- **Themes are phase 2.** v0.1 ships the single V7 theme (near-black +
-  amber). `lib/core/theme.dart` is structured for the dark/light swap:
-  the palette lives in `FpPalette` and `AppTheme` builds from it —
-  phase 2 adds a second palette and a mode switch, no screen changes.
-- **Persistence is `shared_preferences` + JSON**, not Drift/SQLite:
-  the v0.1 data model (reports, rules, waivers, settings) is small
-  document data, and JSON keeps web working with zero native setup.
-  Drift is the phase-2 move if the model goes relational.
+## The interface
 
-## Verification
+The app is one experience across phone and web — 30 screens each, same flows, same verdict.
 
-Flutter/Dart is not installed on the build VM, so the Dart test suite
-is **authored, not yet run** — run `flutter test` on a machine with
-Flutter to execute it. What was verified on the build VM instead:
+<p align="center">
+  <img src="docs/screenshots/mobile-grid.jpg" width="800" alt="FRAME POLICE mobile flow — all 30 screens: home, inspect, report, defect detail, fixes, waivers, registry, CI runs, and guest-first sign-in">
+  <br>
+  <em>Mobile — all 30 screens, from picking an export to the exit-0 payoff.</em>
+</p>
 
-- Every screen route exists in `lib/app.dart` (30/30) and every
-  `pushNamed` target in the screens resolves to a registered route.
-- Every import resolves to a file in the repo (checked by name).
-- No TODO/stub/placeholder in core flows (checked by text search).
-- The demo verdict was hand-verified against the engine: Launch Teaser
-  v3 inspects to exactly 2 defects (SUB-SAFE-01 at 1,066 px vs the
-  1,052 px limit; AUD-PEAK-02 at −0.8 dBFS vs the −1.0 dBFS limit),
-  3 suggestions, score 82, exit 1 — the V7 canon.
-
-The test suite (`test/`, run with `flutter test`):
-
-- `exit_codes_test.dart` — exit-code mapping, labels, CI behaviour.
-- `inspector_test.dart` — the demo verdict, clean/defect exports,
-  suggestions-never-block, scoring, fix + re-inspection (exit 0),
-  waiver carry-forward, fix-that-does-not-hold re-opens, demo-probe
-  determinism, fingerprint stability, subtitle-limit geometry.
-- `registry_test.dart` — 14 rules (11 + 3), unique codes, versioning
-  (edits bump the version, history preserved), JSON round-trip.
-- `autofix_test.dart` — every defect rule has a fix, suggestions have
-  none, fixes adjust probe values, original export untouched.
-- `reporter_test.dart` — all four formats carry the verdict, registry,
-  and waiver reason; HTML escaping; workflow YAML pins the registry.
-
-## Run the app
-
-```sh
-flutter pub get
-flutter run            # mobile / desktop
-flutter run -d chrome  # web
-flutter test           # Dart test suite
-flutter analyze        # lints
-```
-
-## Layout
-
-```
-lib/
-  main.dart                  Entry point
-  app.dart                   App shell + 30 routes
-  core/
-    constants.dart           Registry version, exit codes, demo fixture
-    format.dart              Timecode / duration / dB / bytes formatting
-    theme.dart               V7 palette (single theme, phase-2-ready)
-    responsive.dart          Breakpoints, adaptive columns / grids
-  engine/                    The linter (pure Dart, no Flutter dependency)
-    models.dart              Exports, probes, rules, findings, waivers,
-                             reports, CI runs, account, settings
-    registry.dart            The 14 versioned rules (v2.4.1)
-    inspector.dart           Rule engine, scoring, re-inspection, demo probe
-    exit_codes.dart          The CI exit-code contract
-    autofix.dart             One-tap fix definitions per defect rule
-    reporter.dart            HTML / JSON / Markdown / TTY + workflow YAML
-    demo_data.dart           Seeded demo exports, history, CI runs
-  services/
-    store.dart               Local-first persistence (shared_preferences)
-    secure_session.dart      Session token (flutter_secure_storage)
-    file_picker_service.dart Pick exports to inspect
-    report_export.dart       Save reports + full .zip data export
-  state/
-    app_controller.dart      ChangeNotifier: everything screens read
-  widgets/
-    app_shell.dart           Adaptive scaffold (tab bar / side nav)
-    fp_widgets.dart          Glass cards, tags, buttons, rows
-    logo.dart                SVG logo widgets (icon, lockups, app icon)
-    score_bars.dart          Quality-history chart
-    waveform.dart            Waveform + marker-track painters
-    frame_mock.dart          Before/after frame mock
-  screens/                   30 functional routes (see Screens)
-test/                        Dart test suite (flutter test)
-assets/logos/                SVG logos (icon, icon-small, horizontal,
-                             stacked, app-icon)
-web/                         Web entry (index.html, manifest.json)
-```
-
-## Roadmap (v0.2)
-
-1. **Native media probe** — decode real video frames and audio
-   (subtitle positions, peak levels, black frames) so user-picked
-   files get measured probes instead of demo probes.
-2. **Real media auto-fix** — apply fixes to media bytes (move the
-   subtitle, limit the audio) instead of probe data.
-3. **GitHub Action** — ship `frame-police/action@v2` and wire live CI
-   runs; replace seeded demo runs with real run data.
-4. **Backend sync** — real accounts, team registry, shared waivers,
-   and email verification (replacing local-only auth).
-5. **Dual themes** — light theme alongside the V7 dark theme, via the
-   `FpPalette` swap point in `theme.dart`.
-6. **Drift/SQLite** — relational store if the model outgrows JSON.
-7. **Design-system checks** — extend the rule engine beyond video
-   exports to Figma frames: spacing, type scale, colour tokens, radius,
-   and component usage against a design-system file.
-
-## Appendix: GitHub Action workflow
-
-Add this file via the GitHub web UI at
-`.github/workflows/frame-police.yml` (the repo intentionally ships no
-`.github/workflows/` directory — see the CI setup screen in the app):
-
-```yaml
-name: Frame Police
-on: [pull_request]
-jobs:
-  inspect:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: frame-police/action@v2
-        with:
-          registry: v2.4.1
-          paths: exports/**/*.mp4
-```
-
-## Deploy note
-
-Run #5's Pages deploy failed on GitHub's side (artifact fetch error),
-and re-running the failed job failed again (duplicate artifact). This
-commit re-triggers a fresh workflow run. Run #7 (commit b81624e) hit
-the same artifact fetch error again — re-triggered the same way.
+<p align="center">
+  <img src="docs/screenshots/web-grid.jpg" width="800" alt="FRAME POLICE web flow — all 30 pages: dashboard, inspect, report, defect detail, fixes, waivers, registry, CI runs, and guest-first sign-in">
+  <br>
+  <em>Web — all 30 pages, the same inspector with room to spread out.</em>
+</p>
