@@ -67,12 +67,14 @@ class _InspectingScreenState extends State<InspectingScreen> {
         reportId == null ? null : controller.reportById(reportId);
     Report? report;
     try {
-      // A re-inspection first applies the fixes to the working copy.
-      // prepareReinspection throws when the report's export is missing
-      // from the store (inconsistent persisted state), and
-      // runInspection can throw when persisting the finished report
-      // fails. Either failure must show on screen — an unhandled throw
-      // here used to leave the run stuck at 0% with a live spinner.
+      // A re-inspection resolves the export behind the report (there
+      // is no working copy anymore — fixes operated on probe data, not
+      // media, and were removed). prepareReinspection throws when the
+      // report's export is missing from the store (inconsistent
+      // persisted state), and runInspection can throw when persisting
+      // the finished report fails. Either failure must show on screen
+      // — an unhandled throw here used to leave the run stuck at 0%
+      // with a live spinner.
       final runTarget = previous == null
           ? export
           : controller.prepareReinspection(previous);
@@ -165,6 +167,11 @@ class _InspectingScreenState extends State<InspectingScreen> {
         .where((probe) => probe.state == ProbeState.running)
         .toList();
     final runningProbe = running.isEmpty ? null : running.first;
+    // During the probe stage the rules have not started yet, so the
+    // header shows the live probe stage ("Sampling frames…") instead
+    // of a rule count. Once evaluation starts, it shows the rule.
+    final isProbing = controller.inspectionStage.isNotEmpty &&
+        controller.inspectionStage != 'Evaluating rules…';
     final doneCount = controller.probeProgress
         .where((probe) => probe.state != ProbeState.queued &&
             probe.state != ProbeState.running)
@@ -203,9 +210,11 @@ class _InspectingScreenState extends State<InspectingScreen> {
                 const SizedBox(width: 14),
                 Expanded(
                   child: Text(
-                    runningProbe == null
-                        ? 'Probe $doneCount of ${controller.probeProgress.length}'
-                        : 'Probe ${doneCount + 1} of ${controller.probeProgress.length} · ${runningProbe.label}',
+                    isProbing
+                        ? controller.inspectionStage
+                        : runningProbe == null
+                            ? 'Probe $doneCount of ${controller.probeProgress.length}'
+                            : 'Probe ${doneCount + 1} of ${controller.probeProgress.length} · ${runningProbe.label}',
                     style: Theme.of(context)
                         .textTheme
                         .bodyMedium
@@ -310,6 +319,8 @@ class _InspectingScreenState extends State<InspectingScreen> {
       ProbeState.pass => (Icons.check_circle, p.green, 'Pass'),
       ProbeState.defect => (Icons.error, p.red, 'Defect'),
       ProbeState.suggestion => (Icons.lightbulb, p.muted, 'Suggestion'),
+      ProbeState.skipped =>
+        (Icons.remove_circle_outline, p.muted, 'Not measured'),
     };
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 7),

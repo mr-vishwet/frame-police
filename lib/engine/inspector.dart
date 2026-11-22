@@ -4,12 +4,13 @@
 /// same report. It never touches raw media — rules evaluate ONLY against
 /// [ProbeData], which is what makes inspections reproducible and testable.
 ///
-/// v0.1 honesty note: seeded demo exports carry measured probe data. For
-/// user-picked files, [demoProbeFor] derives a deterministic probe from
-/// the file's name and size — labelled DEMO in the report until the
-/// native media probe (frame/audio decode) lands in phase 2. The rule
-/// engine, scoring, waivers, and exit-code mapping are the real product
-/// and are fully tested.
+/// The probe is the real Tier A browser-native probe (see
+/// `services/media_probe.dart`). Rules whose inputs the probe did not
+/// measure are listed in [ProbeData.unmeasured]; [inspect] skips them
+/// (no finding, no pass) and records them in [Report.skippedRules] —
+/// the report says what was not measured instead of pretending it
+/// passed. Exports picked before the real probe landed still carry the
+/// old hash-derived demo probe, flagged by `isDemoProbe`.
 library;
 
 import 'dart:convert';
@@ -373,6 +374,14 @@ class Inspector {
   /// fixed findings that now pass become confirmed, and fixed findings
   /// that still fail re-open. Suggestions are only evaluated when
   /// [suggestionsEnabled].
+  ///
+  /// Rules listed in `file.probe.unmeasured` are SKIPPED — no finding,
+  /// no pass — and recorded in the report's [Report.skippedRules]. A
+  /// skipped rule carries nothing forward from a previous report: with
+  /// nothing measured, there is nothing to confirm or waive.
+  ///
+  /// [durationSeconds] is the caller-measured inspection duration (the
+  /// old hardcoded 19 s is gone); 0 when the caller did not measure it.
   static Report inspect({
     required ExportFile file,
     required List<Rule> rules,
@@ -380,9 +389,11 @@ class Inspector {
     bool suggestionsEnabled = true,
     Report? previousReport,
     DateTime? now,
+    int? durationSeconds,
   }) {
     final timestamp = now ?? DateTime.now();
     final findings = <Finding>[];
+    final skippedRules = <String>[];
     final previous = <String, Finding>{};
     if (previousReport != null) {
       for (final finding in previousReport.findings) {
@@ -393,6 +404,11 @@ class Inspector {
     for (final rule in rules) {
       if (!rule.enabled) continue;
       if (rule.kind == FindingKind.suggestion && !suggestionsEnabled) {
+        continue;
+      }
+      if (file.probe.unmeasured.contains(rule.code)) {
+        // Not measured by this probe: skip honestly, record it.
+        skippedRules.add(rule.code);
         continue;
       }
       final finding = evaluateRule(rule, file);
@@ -428,10 +444,11 @@ class Inspector {
       findings: findings,
       score: score,
       exitCode: exitCode,
-      durationSeconds: 19,
+      durationSeconds: durationSeconds ?? 0,
       framesProbed: file.frameCount,
       fingerprint: '',
       demoProbe: file.probe.isDemoProbe,
+      skippedRules: skippedRules,
     );
     return report.copyWith(fingerprint: fingerprintFor(report));
   }
@@ -445,123 +462,4 @@ class Inspector {
     return sha256.convert(bytes).toString();
   }
 
-  /// Applies auto-fixes to a working copy of [file]: the probe values
-  /// (and, for frame-rate / resolution / aspect fixes, the export
-  /// metadata) are adjusted to their post-fix values. The original file
-  /// is untouched — v0.1 fixes operate on probe data and metadata, not
-  /// media bytes; real media rewriting is phase 2.
-  static ExportFile applyFixesToExport(
-    ExportFile file,
-    Iterable<Finding> fixed,
-  ) {
-    var probe = file.probe;
-    var width = file.width;
-    var height = file.height;
-    var fps = file.fps;
-    var declaredAspect = file.declaredAspect;
-    for (final finding in fixed) {
-      switch (finding.ruleCode) {
-        case kRuleSubtitleSafeArea:
-          probe = probe.copyWith(
-            subtitleBottomY: finding.limitValue - 12,
-          );
-        case kRuleAudioPeak:
-          probe = probe.copyWith(
-            peakDbfs: DemoFixture.peakFixedDbfs,
-            longestSilenceSeconds: 0,
-          );
-        case kRuleAspectRatio:
-          // Re-crop to the declared aspect at canonical dimensions, so
-          // the re-inspection passes exactly (rounding height * w / h
-          // can land a pixel off and still fail the rule).
-          if (declaredAspect == '9:16') {
-            width = 1080;
-            height = 1920;
-          } else if (declaredAspect == '16:9') {
-            width = 1920;
-            height = 1080;
-          } else {
-            final parts = declaredAspect.split(':');
-            final w = int.parse(parts[0]);
-            final h = int.parse(parts[1]);
-            width = (height * w / h).round();
-          }
-        case kRuleBlackFrames:
-          probe = probe.copyWith(blackFrameCount: 0);
-        case kRuleTextOverflow:
-          probe = probe.copyWith(textOverflow: false);
-        case kRuleBrandLogo:
-          probe = probe.copyWith(brandLogoPresent: true);
-        case kRuleBrandColor:
-          probe = probe.copyWith(brandColorsOk: true);
-        case kRuleCaptionSync:
-          probe = probe.copyWith(captionSyncOffsetMs: 0);
-        case kRuleTitleSafeArea:
-          probe = probe.copyWith(titleBottomY: height * 0.5);
-        case kRuleFrameRate:
-          fps = 24;
-        case kRuleMinResolution:
-          final shortEdge = width < height ? width : height;
-          if (shortEdge < 1080) {
-            final scale = 1080 / shortEdge;
-            width = (width * scale).round();
-            height = (height * scale).round();
-          }
-        default:
-          break;
-      }
-    }
-    return ExportFile(
-      id: file.id,
-      name: file.name,
-      durationSeconds: file.durationSeconds,
-      frameCount: file.frameCount,
-      width: width,
-      height: height,
-      fps: fps,
-      sizeBytes: file.sizeBytes,
-      addedAt: file.addedAt,
-      probe: probe,
-      isDemo: file.isDemo,
-      declaredAspect: declaredAspect,
-    );
-  }
-
-  /// Deterministic demo probe for a user-picked file, derived from the
-  /// file's name and size with FNV-1a (Dart's `String.hashCode` is not
-  /// stable across runs, so it cannot be used). Same file = same probe
-  /// = same report. Labelled DEMO everywhere it shows.
-  static ProbeData demoProbeFor(String name, int sizeBytes) {
-    var hash = 0x811c9dc5;
-    final bytes = utf8.encode('$name|$sizeBytes');
-    for (final byte in bytes) {
-      hash ^= byte;
-      hash = (hash * 0x01000193) & 0xFFFFFFFF;
-    }
-    double pick(int slot, double min, double max) {
-      final slice = (hash >> (slot * 5)) & 0x1F;
-      return min + (max - min) * (slice / 31);
-    }
-
-    final hasSubtitleBreach = (hash & 0x1) == 1;
-    final hasPeakBreach = ((hash >> 1) & 0x1) == 1;
-    return ProbeData(
-      subtitleBottomY:
-          hasSubtitleBreach ? pick(2, 1053, 1090) : pick(2, 980, 1040),
-      subtitleTimecode: '00:00:12:08',
-      peakDbfs: hasPeakBreach ? pick(3, -0.9, -0.4) : pick(3, -3.0, -1.2),
-      peakTimecode: '00:00:31:22',
-      longestSilenceSeconds: pick(4, 0.2, 1.4),
-      blackFrameCount: ((hash >> 4) & 0x1) == 1 ? 2 : 0,
-      textOverflow: ((hash >> 5) & 0x1) == 1,
-      brandLogoPresent: ((hash >> 6) & 0x1) == 1,
-      brandColorsOk: ((hash >> 7) & 0x1) == 1,
-      captionSyncOffsetMs: pick(8, 0, 90),
-      titleBottomY: pick(9, 400, 900),
-      loudnessLufs: pick(10, -15.5, -12.5),
-      openingFrameDarkness: pick(11, 0.2, 0.8),
-      captionsFileAttached: ((hash >> 12) & 0x1) == 1,
-      isDemoProbe: true,
-    );
-  }
 }

@@ -1,7 +1,9 @@
 /// Settings — screen 19 (mobile + web).
 ///
-/// Checks, CI, and about — suggestions on, auto-inspect on, registry
-/// pinned. On web the checks and CI sit side by side, about and data
+/// Checks, CI, and about — suggestions on, registry pinned.
+/// Auto-inspect and PR comments are coming soon (they need folder
+/// access and the published Action) and are labelled as such, not
+/// toggles. On web the checks and CI sit side by side, about and data
 /// below. The account row leads to the account screens.
 library;
 
@@ -77,14 +79,14 @@ class SettingsScreen extends StatelessWidget {
                       ),
                     ),
                     const Divider(height: 8),
-                    FpToggleRow(
+                    FpRow(
                       title: 'Auto-inspect new exports',
                       subtitle:
-                          'Run when a new file lands in Exports',
+                          'Coming soon — needs folder access',
                       icon: Icons.auto_awesome_outlined,
-                      value: settings.autoInspect,
-                      onChanged: (value) => controller.updateSettings(
-                        settings.copyWith(autoInspect: value),
+                      trailing: Tag(
+                        'Coming soon',
+                        color: p.muted,
                       ),
                     ),
                   ],
@@ -111,13 +113,14 @@ class SettingsScreen extends StatelessWidget {
                           Navigator.pushNamed(context, '/ci-setup'),
                     ),
                     const Divider(height: 8),
-                    FpToggleRow(
+                    FpRow(
                       title: 'PR comments',
-                      subtitle: 'Post the report on every run',
+                      subtitle:
+                          'Coming soon — needs the published Action',
                       icon: Icons.comment_outlined,
-                      value: settings.prComments,
-                      onChanged: (value) => controller.updateSettings(
-                        settings.copyWith(prComments: value),
+                      trailing: Tag(
+                        'Coming soon',
+                        color: p.muted,
                       ),
                     ),
                     const Divider(height: 8),

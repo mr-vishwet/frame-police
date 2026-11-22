@@ -1,8 +1,10 @@
 /// Waveform and marker-track painters for the audio defect screens.
 ///
-/// The waveform is deterministic (seeded from the finding's rule code)
-/// so the before/after pair is stable across rebuilds. The marker
-/// tracks show where the defects sit on the timeline.
+/// The waveform draws REAL measured peaks — the normalized samples the
+/// probe captured from the export's audio. There is no seeded or
+/// synthetic waveform anywhere: when the probe captured no peaks, the
+/// screens show an honest "No audio waveform" state instead of drawing
+/// one.
 library;
 
 import 'dart:math' as math;
@@ -11,30 +13,32 @@ import 'package:material_ui/material_ui.dart';
 
 import '../core/theme.dart';
 
-/// A deterministic waveform. [peakAt] (0..1) places the over-limit peak;
-/// [cap] clamps the amplitude for the after-fix waveform.
+/// A waveform drawn from real measured peaks (normalized 0..1).
+/// [peakAt] (0..1) marks the over-limit peak in red, when the finding
+/// has one.
 class WaveformView extends StatelessWidget {
   /// Creates a [WaveformView].
   const WaveformView({
-    required this.seed,
+    required this.peaks,
     this.height = 64,
     this.peakAt,
-    this.cap = 1.0,
     this.color,
     this.showLimit = false,
     super.key,
   });
 
-  /// The seed.
-  final int seed;
+  /// The measured peaks, normalized 0..1.
+  final List<double> peaks;
+
   /// The height.
   final double height;
-  /// Where the over-limit peak sits (0..1).
+
+  /// Where the over-limit peak sits (0..1), highlighted in red.
   final double? peakAt;
-  /// The cap.
-  final double cap;
+
   /// The color.
   final Color? color;
+
   /// Whether to show the limit line.
   final bool showLimit;
 
@@ -45,9 +49,8 @@ class WaveformView extends StatelessWidget {
       height: height,
       child: CustomPaint(
         painter: _WaveformPainter(
-          seed: seed,
+          peaks: peaks,
           peakAt: peakAt,
-          cap: cap,
           color: color ?? p.secondary.withValues(alpha: 0.55),
           limitColor: p.red,
           showLimit: showLimit,
@@ -60,24 +63,22 @@ class WaveformView extends StatelessWidget {
 
 class _WaveformPainter extends CustomPainter {
   _WaveformPainter({
-    required this.seed,
+    required this.peaks,
     required this.peakAt,
-    required this.cap,
     required this.color,
     required this.limitColor,
     required this.showLimit,
   });
 
-  final int seed;
+  final List<double> peaks;
   final double? peakAt;
-  final double cap;
   final Color color;
   final Color limitColor;
   final bool showLimit;
 
   @override
   void paint(Canvas canvas, Size size) {
-    final random = math.Random(seed);
+    if (peaks.isEmpty) return;
     const bars = 72;
     final barWidth = size.width / bars;
     final paint = Paint()
@@ -88,16 +89,19 @@ class _WaveformPainter extends CustomPainter {
       ..style = PaintingStyle.fill;
     for (var i = 0; i < bars; i++) {
       final t = i / bars;
-      var amp = 0.25 + random.nextDouble() * 0.55;
-      // A gentle swell toward the drop, then decay.
-      amp *= 0.7 + 0.5 * math.sin(t * math.pi);
-      var isPeak = false;
-      if (peakAt != null && (t - peakAt!).abs() < 1 / bars) {
-        amp = 1.0;
-        isPeak = true;
+      // Downsample the real peaks: each bar shows the max of its slice.
+      final start = (t * peaks.length).floor();
+      final end = ((i + 1) / bars * peaks.length).ceil().clamp(
+            start + 1,
+            peaks.length,
+          );
+      var amp = 0.0;
+      for (var j = start; j < end; j++) {
+        amp = math.max(amp, peaks[j].clamp(0.0, 1.0));
       }
-      amp = math.min(amp, cap);
-      final barHeight = amp * size.height;
+      final isPeak =
+          peakAt != null && (t - peakAt!).abs() < 1 / bars;
+      final barHeight = (amp * size.height).clamp(2.0, size.height);
       final x = i * barWidth + barWidth * 0.2;
       final rect = Rect.fromLTWH(
         x,
@@ -129,9 +133,8 @@ class _WaveformPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(_WaveformPainter old) =>
-      old.seed != seed ||
+      old.peaks != peaks ||
       old.peakAt != peakAt ||
-      old.cap != cap ||
       old.color != color;
 }
 
@@ -151,6 +154,7 @@ class MarkerTracks extends StatelessWidget {
 
   /// (timecodeSeconds, label, isDefect) markers.
   final List<(double, String, bool)> markers;
+
   /// The height.
   final double height;
 

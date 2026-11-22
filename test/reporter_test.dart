@@ -2,26 +2,27 @@ import 'dart:convert';
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:frame_police/core/constants.dart';
-import 'package:frame_police/engine/demo_data.dart';
 import 'package:frame_police/engine/inspector.dart';
 import 'package:frame_police/engine/models.dart';
 import 'package:frame_police/engine/registry.dart';
 import 'package:frame_police/engine/reporter.dart';
 
+import 'test_fixtures.dart';
+
 void main() {
   late Report report;
 
   setUp(() {
-    final teaser = demoExports().first;
+    final export = twoDefectExport();
     final inspected = Inspector.inspect(
-      file: teaser,
+      file: export,
       rules: defaultRules(),
       registryVersion: kRegistryVersion,
       now: DateTime.utc(2026, 11, 21, 12),
     );
     // Waive the subtitle defect so every format must carry the reason.
     final waiver = Waiver(
-      reason: DemoFixture.waiverReason,
+      reason: kTestWaiverReason,
       tag: 'Client approved',
       createdAt: DateTime.utc(2026, 11, 21, 12, 5),
       waivedBy: 'Guest',
@@ -67,7 +68,7 @@ void main() {
       final waiverJson = waived['waiver'] as Map<String, dynamic>;
       expect(
         waiverJson['reason'],
-        DemoFixture.waiverReason,
+        kTestWaiverReason,
       );
     });
   });
@@ -80,7 +81,7 @@ void main() {
       expect(md, contains(kRegistryVersion));
       expect(md, contains('SUB-SAFE-01'));
       expect(md, contains('AUD-PEAK-02'));
-      expect(md, contains(DemoFixture.waiverReason));
+      expect(md, contains(kTestWaiverReason));
       expect(md, contains('Suggestions (not blocking)'));
       expect(md, contains(report.fingerprint));
     });
@@ -91,7 +92,7 @@ void main() {
       final tty = Reporter.toTty(report);
       expect(tty, contains('exit 1'));
       expect(tty, contains('SUB-SAFE-01'));
-      expect(tty, contains(DemoFixture.waiverReason));
+      expect(tty, contains(kTestWaiverReason));
       expect(tty, contains(report.fingerprint));
     });
   });
@@ -102,7 +103,7 @@ void main() {
       expect(html, contains('<!DOCTYPE html>'));
       expect(html, contains('Exit 1'));
       expect(html, contains(kRegistryVersion));
-      expect(html, contains(DemoFixture.waiverReason));
+      expect(html, contains(kTestWaiverReason));
       expect(html, contains(report.fingerprint));
     });
 

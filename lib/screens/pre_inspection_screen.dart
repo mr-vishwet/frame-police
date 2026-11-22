@@ -76,8 +76,9 @@ class PreInspectionScreen extends StatelessWidget {
                         StatTile(
                           label: 'Duration',
                           value: formatDuration(export.durationSeconds),
-                          caption:
-                              '${formatInt(export.frameCount)} frames',
+                          caption: export.frameCount > 0
+                              ? '${formatInt(export.frameCount)} frames'
+                              : 'Counted during inspection',
                         ),
                         StatTile(
                           label: 'Format',
@@ -87,7 +88,9 @@ class PreInspectionScreen extends StatelessWidget {
                         StatTile(
                           label: 'Size',
                           value: formatBytes(export.sizeBytes),
-                          caption: '${export.fps} fps',
+                          caption: export.fps > 0
+                              ? '${export.fps} fps'
+                              : 'Measured during inspection',
                         ),
                       ],
                     ),
@@ -175,8 +178,18 @@ class PreInspectionScreen extends StatelessWidget {
             const SizedBox(height: 8),
             Center(
               child: Text(
-                'About 20 seconds · frame, audio and text probes',
+                'Measured live in your browser · video, audio and frame probes',
                 style: Theme.of(context).textTheme.bodySmall,
+                textAlign: TextAlign.center,
+              ),
+            ),
+            const SizedBox(height: 4),
+            Center(
+              child: Text(
+                'Text, subtitle and brand checks need vision (Tier B) — '
+                'the report lists them as not measured.',
+                style: Theme.of(context).textTheme.bodySmall,
+                textAlign: TextAlign.center,
               ),
             ),
           ],

@@ -132,7 +132,8 @@ class LocalStore {
     await (await _prefs()).setString(_ciRunsKey, raw);
   }
 
-  /// CI totals as [total, failed, clean]. Seeded from the demo fixture.
+  /// CI totals as [total, failed, clean]. Start at zero — no seeded
+  /// demo totals.
   Future<List<int>?> loadCiTotals() async {
     final raw = (await _prefs()).getString(_ciTotalsKey);
     if (raw == null) return null;
@@ -150,11 +151,12 @@ class LocalStore {
   static const _countersKey = 'fp.counters.v1';
 
   /// Lifetime counters as [defectsCaught, zeroDefectExports].
+  /// Start at zero — no seeded demo numbers.
   Future<List<int>> loadCounters() async {
     final raw = (await _prefs()).getString(_countersKey);
-    if (raw == null) return const [47, 12];
+    if (raw == null) return const [0, 0];
     final list = jsonDecode(raw) as List<dynamic>;
-    if (list.length < 2) return const [47, 12];
+    if (list.length < 2) return const [0, 0];
     return [list[0] as int, list[1] as int];
   }
 

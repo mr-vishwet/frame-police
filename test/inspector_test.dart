@@ -1,23 +1,18 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:frame_police/core/constants.dart';
-import 'package:frame_police/engine/demo_data.dart';
 import 'package:frame_police/engine/inspector.dart';
 import 'package:frame_police/engine/models.dart';
 import 'package:frame_police/engine/registry.dart';
 
+import 'test_fixtures.dart';
+
 void main() {
-  group('known-bad demo reel inspection', () {
-    // The Inspect screen's known-bad card previews this count
-    // ("5 defects waiting") — if the seeded probe changes, the card
-    // text in inspect_entry_screen.dart must change with it.
+  group('known-bad export inspection', () {
     late Report report;
 
     setUp(() {
-      final knownBad = demoExports().firstWhere(
-        (e) => e.id == 'exp_known_bad',
-      );
       report = Inspector.inspect(
-        file: knownBad,
+        file: knownBadExport(),
         rules: defaultRules(),
         registryVersion: kRegistryVersion,
         now: DateTime.utc(2026, 11, 21, 12),
@@ -30,7 +25,7 @@ void main() {
       expect(report.findings.length, 8);
     });
 
-    test('defect codes are the seeded five', () {
+    test('defect codes are the expected five', () {
       final codes =
           report.defects.map((f) => f.ruleCode).toList()..sort();
       expect(codes, [
@@ -48,14 +43,14 @@ void main() {
     });
   });
 
-  group('demo teaser inspection (V7 canon)', () {
-    late ExportFile teaser;
+  group('two-defect export inspection', () {
+    late ExportFile export;
     late Report report;
 
     setUp(() {
-      teaser = demoExports().first;
+      export = twoDefectExport();
       report = Inspector.inspect(
-        file: teaser,
+        file: export,
         rules: defaultRules(),
         registryVersion: kRegistryVersion,
         now: DateTime.utc(2026, 11, 21, 12),
@@ -68,23 +63,23 @@ void main() {
       expect(report.findings.length, 5);
     });
 
-    test('subtitle defect carries the canonical evidence', () {
+    test('subtitle defect carries the expected evidence', () {
       final subtitle = report.defects.firstWhere(
         (f) => f.ruleCode == kRuleSubtitleSafeArea,
       );
-      expect(subtitle.timecode, DemoFixture.subtitleTimecode);
-      expect(subtitle.measuredValue, DemoFixture.subtitleBottomY);
-      expect(subtitle.limitValue, DemoFixture.subtitleLimitY);
+      expect(subtitle.timecode, '00:00:12:08');
+      expect(subtitle.measuredValue, 1066);
+      expect(subtitle.limitValue, 1052);
       expect(subtitle.measuredValue - subtitle.limitValue, 14);
     });
 
-    test('audio defect carries the canonical evidence', () {
+    test('audio defect carries the expected evidence', () {
       final peak = report.defects.firstWhere(
         (f) => f.ruleCode == kRuleAudioPeak,
       );
-      expect(peak.timecode, DemoFixture.peakTimecode);
-      expect(peak.measuredValue, DemoFixture.peakDbfs);
-      expect(peak.limitValue, DemoFixture.peakLimitDbfs);
+      expect(peak.timecode, '00:00:31:22');
+      expect(peak.measuredValue, -0.8);
+      expect(peak.limitValue, -1.0);
     });
 
     test('score is 82 and exit code is 1', () {
@@ -98,7 +93,7 @@ void main() {
 
     test('inspection is deterministic', () {
       final again = Inspector.inspect(
-        file: teaser,
+        file: export,
         rules: defaultRules(),
         registryVersion: kRegistryVersion,
         now: DateTime.utc(2026, 11, 21, 12),
@@ -110,10 +105,9 @@ void main() {
   });
 
   group('clean export', () {
-    test('Product Demo v2 is clean: exit 0, score 100', () {
-      final demo = demoExports()[1];
+    test('clean export is exit 0, score 100', () {
       final report = Inspector.inspect(
-        file: demo,
+        file: cleanExport(),
         rules: defaultRules(),
         registryVersion: kRegistryVersion,
       );
@@ -124,11 +118,10 @@ void main() {
     });
   });
 
-  group('other demo exports', () {
-    test('Founder Story cut 4 has 1 defect (black frames)', () {
-      final founder = demoExports()[2];
+  group('other exports', () {
+    test('single-defect export has 1 defect (black frames)', () {
       final report = Inspector.inspect(
-        file: founder,
+        file: singleDefectExport(),
         rules: defaultRules(),
         registryVersion: kRegistryVersion,
       );
@@ -138,10 +131,9 @@ void main() {
       expect(report.exitCode, kExitDefects);
     });
 
-    test('known-bad reel has 5 defects and 3 suggestions', () {
-      final bad = demoExports()[3];
+    test('known-bad export has 5 defects and 3 suggestions', () {
       final report = Inspector.inspect(
-        file: bad,
+        file: knownBadExport(),
         rules: defaultRules(),
         registryVersion: kRegistryVersion,
       );
@@ -154,13 +146,12 @@ void main() {
 
   group('suggestions never block', () {
     test('suggestions-only run is exit 0 with score 100', () {
-      final teaser = demoExports().first;
       // Disable all defect rules: only suggestions can fire.
       final rules = defaultRules()
           .map((r) => r.isDefect ? r.copyWith(enabled: false) : r)
           .toList();
       final report = Inspector.inspect(
-        file: teaser,
+        file: twoDefectExport(),
         rules: rules,
         registryVersion: kRegistryVersion,
       );
@@ -171,9 +162,8 @@ void main() {
     });
 
     test('suggestions disabled removes them from the report', () {
-      final teaser = demoExports().first;
       final report = Inspector.inspect(
-        file: teaser,
+        file: twoDefectExport(),
         rules: defaultRules(),
         registryVersion: kRegistryVersion,
         suggestionsEnabled: false,
@@ -204,16 +194,17 @@ void main() {
   });
 
   group('fix + re-inspection', () {
-    test('fixing both defects and re-inspecting lands exit 0', () {
-      final teaser = demoExports().first;
+    test('fixing both defects in the editor and re-inspecting lands exit 0',
+        () {
       final first = Inspector.inspect(
-        file: teaser,
+        file: twoDefectExport(),
         rules: defaultRules(),
         registryVersion: kRegistryVersion,
       );
       expect(first.exitCode, kExitDefects);
 
-      // Mark both fixed, apply the fixes to the working copy.
+      // Mark both fixed, then re-inspect the RE-EXPORTED file — the
+      // new file carries the fixed values, not edited probe numbers.
       final fixedReport = first.copyWith(
         findings: first.findings
             .map((f) => f.isDefect
@@ -221,12 +212,8 @@ void main() {
                 : f)
             .toList(),
       );
-      final workingCopy = Inspector.applyFixesToExport(
-        teaser,
-        fixedReport.fixedAwaiting,
-      );
       final second = Inspector.inspect(
-        file: workingCopy,
+        file: fixedTwoDefectExport(),
         rules: defaultRules(),
         registryVersion: kRegistryVersion,
         previousReport: fixedReport,
@@ -242,14 +229,13 @@ void main() {
     });
 
     test('a waiver carries forward across re-inspection', () {
-      final teaser = demoExports().first;
       final first = Inspector.inspect(
-        file: teaser,
+        file: twoDefectExport(),
         rules: defaultRules(),
         registryVersion: kRegistryVersion,
       );
       final waiver = Waiver(
-        reason: DemoFixture.waiverReason,
+        reason: kTestWaiverReason,
         tag: 'Client approved',
         createdAt: DateTime.utc(2026, 11, 21, 12),
         waivedBy: 'Guest',
@@ -268,12 +254,10 @@ void main() {
           return f;
         }).toList(),
       );
-      final workingCopy = Inspector.applyFixesToExport(
-        teaser,
-        updated.fixedAwaiting,
-      );
+      // Re-export with only the peak fixed: the subtitle still fails
+      // (waiver carries), the peak now passes (fix confirmed).
       final second = Inspector.inspect(
-        file: workingCopy,
+        file: peakFixedExport(),
         rules: defaultRules(),
         registryVersion: kRegistryVersion,
         previousReport: updated,
@@ -283,7 +267,7 @@ void main() {
       expect(second.waivedDefects.length, 1);
       expect(
         second.waivedDefects.first.waiver!.reason,
-        DemoFixture.waiverReason,
+        kTestWaiverReason,
       );
       expect(
         second.findings
@@ -294,13 +278,12 @@ void main() {
     });
 
     test('a fix that does not hold re-opens the defect', () {
-      final teaser = demoExports().first;
       final first = Inspector.inspect(
-        file: teaser,
+        file: twoDefectExport(),
         rules: defaultRules(),
         registryVersion: kRegistryVersion,
       );
-      // Marked fixed but the working copy was NOT actually fixed.
+      // Marked fixed but the re-export was NOT actually fixed.
       final fixedReport = first.copyWith(
         findings: first.findings
             .map((f) => f.isDefect
@@ -309,7 +292,7 @@ void main() {
             .toList(),
       );
       final second = Inspector.inspect(
-        file: teaser,
+        file: twoDefectExport(),
         rules: defaultRules(),
         registryVersion: kRegistryVersion,
         previousReport: fixedReport,
@@ -324,38 +307,16 @@ void main() {
     });
   });
 
-  group('demo probe', () {
-    test('same file gives the same probe', () {
-      final a = Inspector.demoProbeFor('clip.mp4', 123456);
-      final b = Inspector.demoProbeFor('clip.mp4', 123456);
-      expect(a.subtitleBottomY, b.subtitleBottomY);
-      expect(a.peakDbfs, b.peakDbfs);
-      expect(a.blackFrameCount, b.blackFrameCount);
-      expect(a.isDemoProbe, isTrue);
-    });
-
-    test('different files usually differ', () {
-      final a = Inspector.demoProbeFor('a.mp4', 100);
-      final b = Inspector.demoProbeFor('b.mp4', 200);
-      expect(
-        a.subtitleBottomY != b.subtitleBottomY ||
-            a.peakDbfs != b.peakDbfs,
-        isTrue,
-      );
-    });
-  });
-
   group('fingerprint', () {
     test('same report content gives the same fingerprint', () {
-      final teaser = demoExports().first;
       final a = Inspector.inspect(
-        file: teaser,
+        file: twoDefectExport(),
         rules: defaultRules(),
         registryVersion: kRegistryVersion,
         now: DateTime.utc(2026, 11, 21, 12),
       );
       final b = Inspector.inspect(
-        file: teaser,
+        file: twoDefectExport(),
         rules: defaultRules(),
         registryVersion: kRegistryVersion,
         now: DateTime.utc(2026, 11, 21, 12),
@@ -365,16 +326,14 @@ void main() {
     });
 
     test('different findings give a different fingerprint', () {
-      final teaser = demoExports().first;
-      final bad = demoExports()[3];
       final a = Inspector.inspect(
-        file: teaser,
+        file: twoDefectExport(),
         rules: defaultRules(),
         registryVersion: kRegistryVersion,
         now: DateTime.utc(2026, 11, 21, 12),
       );
       final b = Inspector.inspect(
-        file: bad,
+        file: knownBadExport(),
         rules: defaultRules(),
         registryVersion: kRegistryVersion,
         now: DateTime.utc(2026, 11, 21, 12),

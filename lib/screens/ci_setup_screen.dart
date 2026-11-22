@@ -1,18 +1,17 @@
 /// CI setup — screen 17 (mobile + web).
 ///
-/// The workflow file, eleven lines, no wizard — with how it behaves
-/// beside it. Copy the workflow, or connect the Action (account
-/// required — guests get the upgrade prompt).
+/// The workflow file, eleven lines, no wizard — with how it will behave
+/// beside it. The frame-police Action is NOT published yet: the YAML is
+/// a reference for when it ships, not a working integration, and there
+/// is nothing to connect.
 library;
 
 import 'package:material_ui/material_ui.dart';
 import 'package:flutter/services.dart';
 
-import '../core/constants.dart';
 import '../core/responsive.dart';
 import '../core/theme.dart';
 import '../engine/reporter.dart';
-import '../state/app_controller.dart';
 import '../widgets/app_shell.dart';
 import '../widgets/fp_widgets.dart';
 
@@ -23,9 +22,7 @@ class CiSetupScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final controller = AppScope.of(context);
     const p = AppTheme.palette;
-    final connected = controller.settings.ciConnected;
     return FpScaffold(
       title: 'CI setup',
       showBack: true,
@@ -34,11 +31,21 @@ class CiSetupScreen extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            const Kicker('Two minutes, once'),
+            const Kicker('Two minutes, once — when it ships'),
             const SizedBox(height: 6),
             Text(
               'Put the inspector\nin the pipeline.',
               style: Theme.of(context).textTheme.headlineMedium,
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'The frame-police Action isn’t published yet. The workflow '
+              'below is a reference for when it ships — copying it now '
+              'does not run any checks.',
+              style: Theme.of(context)
+                  .textTheme
+                  .bodyMedium
+                  ?.copyWith(color: p.faint),
             ),
             const SizedBox(height: 14),
             AdaptiveColumns(
@@ -80,7 +87,7 @@ class CiSetupScreen extends StatelessWidget {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const Kicker('How it behaves'),
+                        const Kicker('How it will behave'),
                         const SizedBox(height: 8),
                         Text(
                           '1  Runs on every PR that touches an export.\n'
@@ -101,12 +108,10 @@ class CiSetupScreen extends StatelessWidget {
                     child: FpRow(
                       icon: Icons.cloud_sync_outlined,
                       title: 'GitHub Action',
-                      subtitle: connected
-                          ? 'frame-police.yml · connected'
-                          : 'frame-police.yml · not connected',
+                      subtitle: 'frame-police.yml · not published',
                       trailing: Tag(
-                        connected ? 'Connected' : 'Not connected',
-                        color: connected ? p.green : p.muted,
+                        'Not published',
+                        color: p.muted,
                       ),
                     ),
                   ),
@@ -114,29 +119,16 @@ class CiSetupScreen extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 14),
-            Row(
-              children: [
-                Expanded(
-                  child: FpPrimaryButton(
-                    label: 'Copy workflow',
-                    icon: Icons.copy,
-                    onPressed: () => _copy(context),
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: FpGhostButton(
-                    label: connected ? 'Disconnect' : 'Connect Action',
-                    onPressed: () => _connect(context, controller),
-                  ),
-                ),
-              ],
+            FpPrimaryButton(
+              label: 'Copy workflow',
+              icon: Icons.copy,
+              onPressed: () => _copy(context),
             ),
             const SizedBox(height: 8),
             Center(
               child: Text(
-                'Proposed integration · the Action spec is part of this '
-                'Build Specification.',
+                'The Action isn’t published yet — this workflow is a '
+                'reference, not a working integration.',
                 style: Theme.of(context).textTheme.bodySmall,
                 textAlign: TextAlign.center,
               ),
@@ -153,28 +145,5 @@ class CiSetupScreen extends StatelessWidget {
     );
     if (!context.mounted) return;
     showFpSnack(context, 'Workflow copied — add it as .github/workflows/frame-police.yml.');
-  }
-
-  Future<void> _connect(
-    BuildContext context,
-    AppController controller,
-  ) async {
-    if (controller.settings.ciConnected) {
-      await controller.setCiConnected(false);
-      if (!context.mounted) return;
-      showFpSnack(context, 'GitHub Action disconnected. Reports stay yours.');
-      return;
-    }
-    if (controller.isGuest) {
-      // CI integration needs an account.
-      Navigator.pushNamed(context, '/upgrade');
-      return;
-    }
-    await controller.setCiConnected(true);
-    if (!context.mounted) return;
-    showFpSnack(
-      context,
-      'Action connected — registry $kRegistryVersion pinned.',
-    );
   }
 }

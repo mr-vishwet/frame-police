@@ -1,21 +1,30 @@
 /// Defect detail — screens 06 + 07 (mobile + web).
 ///
-/// One screen per finding, parameterised by rule: the subtitle defect
-/// shows before/after frames; the audio defect shows before/after
-/// waveforms; every defect shows its evidence, its auto-fix preview,
-/// and the two decisions — Auto-fix, or Waive with reason.
+/// One screen per finding, parameterised by rule: the frame the probe
+/// captured (when it captured one), the real audio waveform (when the
+/// probe captured peaks), the finding's evidence, its fix guidance,
+/// and the two decisions — fix it in your editor, or waive with reason.
+///
+/// Nothing here is mocked: no frame is drawn, no waveform is seeded.
+/// When the probe captured no frame or no peaks, the screen says so
+/// instead of inventing evidence. The evidence label reads "Measured"
+/// only when the report's probe actually measured the file; demo-probe
+/// reports say "Demo values".
 library;
+
+import 'dart:convert';
+import 'dart:typed_data';
 
 import 'package:material_ui/material_ui.dart';
 
 import '../core/constants.dart';
 import '../core/responsive.dart';
 import '../core/theme.dart';
+import '../engine/autofix.dart';
 import '../engine/models.dart';
 import '../state/app_controller.dart';
 import '../widgets/app_shell.dart';
 import '../widgets/fp_widgets.dart';
-import '../widgets/frame_mock.dart';
 import '../widgets/waveform.dart';
 
 /// The defect detail screen screen.
@@ -56,6 +65,9 @@ class DefectDetailScreen extends StatelessWidget {
     final defects = report.defects;
     final index = defects.indexOf(finding);
     final f = finding;
+    final export = controller.exportById(report.exportId);
+    final isDemo = report.demoProbe;
+    final guidance = fixForRule(f.ruleCode, finding: f) ?? f.fix;
     return FpScaffold(
       title: 'Defect ${index + 1} of ${defects.length}',
       showBack: true,
@@ -86,10 +98,10 @@ class DefectDetailScreen extends StatelessWidget {
             ),
             const SizedBox(height: 14),
             AdaptiveColumns(
-              left: _beforeAfter(context, f),
-              right: _evidenceCard(context, f),
+              left: _evidence(context, f, export, isDemo),
+              right: _evidenceCard(context, f, isDemo),
             ),
-            if (f.fix != null) ...[
+            if (guidance != null) ...[
               const SizedBox(height: 12),
               GlassCard(
                 borderColor: p.orange.withValues(alpha: 0.55),
@@ -103,7 +115,7 @@ class DefectDetailScreen extends StatelessWidget {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            f.fix!.label,
+                            guidance.label,
                             style: Theme.of(context)
                                 .textTheme
                                 .titleMedium
@@ -111,7 +123,7 @@ class DefectDetailScreen extends StatelessWidget {
                           ),
                           const SizedBox(height: 4),
                           Text(
-                            '${f.fix!.detail} After: ${f.fix!.afterLabel}.',
+                            '${guidance.detail} Target: ${guidance.afterLabel}.',
                             style: Theme.of(context).textTheme.bodySmall
                                 ?.copyWith(fontSize: 13),
                           ),
@@ -147,9 +159,13 @@ class DefectDetailScreen extends StatelessWidget {
             const SizedBox(height: 14),
             if (f.status == FindingStatus.open) ...[
               FpPrimaryButton(
-                label: 'Auto-fix this finding',
+                label: 'How to fix in your editor',
                 icon: Icons.build_outlined,
-                onPressed: () => _fix(context, controller, report, f),
+                onPressed: () => Navigator.pushNamed(
+                  context,
+                  '/autofix',
+                  arguments: {'reportId': report.id, 'findingId': f.id},
+                ),
               ),
               const SizedBox(height: 8),
               FpGhostButton(
@@ -175,8 +191,8 @@ class DefectDetailScreen extends StatelessWidget {
             const SizedBox(height: 8),
             Center(
               child: Text(
-                'Fix it in the edit, auto-fix it here, or waive it — a '
-                'waiver needs a reason and stays in the report.',
+                'Fix it in your editor, re-export, and re-inspect — or '
+                'waive it with a reason. A waiver stays in the report.',
                 style: Theme.of(context).textTheme.bodySmall,
                 textAlign: TextAlign.center,
               ),
@@ -244,142 +260,48 @@ class DefectDetailScreen extends StatelessWidget {
     return controller.ruleByCode(code)?.name ?? code;
   }
 
-  Widget _beforeAfter(BuildContext context, Finding finding) {
-    const p = AppTheme.palette;
-    if (finding.ruleCode == kRuleSubtitleSafeArea) {
-      return Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Row(
-            children: [
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    FrameMock.before(
-                      subtitleY: finding.measuredValue,
-                      limitY: finding.limitValue,
-                    ),
-                    const SizedBox(height: 6),
-                    Text(
-                      'BEFORE · y = ${finding.measuredValue.toStringAsFixed(0)} px',
-                      style: AppTheme.mono(size: 11, color: p.red),
-                    ),
-                    Text(
-                      '${(finding.measuredValue - finding.limitValue).toStringAsFixed(0)} px below the line',
-                      style: Theme.of(context).textTheme.bodySmall,
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    FrameMock.after(
-                      subtitleY: finding.limitValue - 12,
-                      limitY: finding.limitValue,
-                    ),
-                    const SizedBox(height: 6),
-                    Text(
-                      'AFTER · y = ${(finding.limitValue - 12).toStringAsFixed(0)} px',
-                      style: AppTheme.mono(size: 11, color: p.green),
-                    ),
-                    Text(
-                      'Inside the safe area',
-                      style: Theme.of(context).textTheme.bodySmall,
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-        ],
-      );
+  /// Real evidence for the finding: the frame the probe captured, or
+  /// the real audio waveform — with an honest empty state when the
+  /// probe captured neither.
+  Widget _evidence(
+    BuildContext context,
+    Finding finding,
+    ExportFile? export,
+    bool isDemo,
+  ) {
+    if (finding.ruleCode == kRuleSubtitleSafeArea ||
+        finding.ruleCode == kRuleTitleSafeArea ||
+        finding.ruleCode == kRuleTextOverflow ||
+        finding.ruleCode == kRuleBlackFrames) {
+      return _frameEvidence(context, finding, export);
     }
     if (finding.ruleCode == kRuleAudioPeak) {
-      return Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          GlassCard(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    const Kicker('Before · waveform'),
-                    Tag('Peak ${finding.timecode}', color: p.red),
-                  ],
-                ),
-                const SizedBox(height: 10),
-                const WaveformView(
-                  seed: 7,
-                  height: 56,
-                  peakAt: 0.66,
-                  showLimit: true,
-                ),
-                const SizedBox(height: 8),
-                Center(
-                  child: Text(
-                    '${finding.timecode} · ${finding.measuredLabel}',
-                    style: AppTheme.mono(size: 11, color: p.red),
-                  ),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(height: 8),
-          GlassCard(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    const Kicker('After · limiter at −1.0 dBFS'),
-                    Text(
-                      'Peak −1.4 dBFS · inside',
-                      style: AppTheme.mono(size: 12, color: p.green),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 8),
-                WaveformView(
-                  seed: 7,
-                  height: 36,
-                  cap: 0.62,
-                  color: p.green.withValues(alpha: 0.6),
-                ),
-              ],
-            ),
-          ),
-        ],
-      );
+      return _waveformEvidence(context, finding, export);
     }
-    // Generic before/after: measured vs limit, side by side.
+    // Generic evidence: measured vs target, side by side.
+    const p = AppTheme.palette;
+    final guidance = fixForRule(finding.ruleCode, finding: finding);
     return GlassCard(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Kicker('Before / after'),
+          const Kicker('Measured vs target'),
           const SizedBox(height: 10),
           Row(
             children: [
               Expanded(
                 child: StatTile(
-                  label: 'Before',
+                  label: isDemo ? 'Derived' : 'Measured',
                   value: finding.measuredLabel,
-                  caption: 'measured',
+                  caption: isDemo ? 'demo probe' : 'measured',
                   valueColor: p.red,
                 ),
               ),
               const Icon(Icons.arrow_forward, size: 18),
               Expanded(
                 child: StatTile(
-                  label: 'After the fix',
-                  value: finding.fix?.afterLabel ?? finding.limitLabel,
+                  label: 'Target',
+                  value: guidance?.afterLabel ?? finding.limitLabel,
                   caption: 'inside the limit',
                   valueColor: p.green,
                 ),
@@ -391,14 +313,150 @@ class DefectDetailScreen extends StatelessWidget {
     );
   }
 
-  Widget _evidenceCard(BuildContext context, Finding finding) {
+  Widget _frameEvidence(
+    BuildContext context,
+    Finding finding,
+    ExportFile? export,
+  ) {
+    const p = AppTheme.palette;
+    final bytes = _thumbnailBytes(export);
     return GlassCard(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Kicker('Evidence — measured, not guessed'),
+          const Kicker('Frame evidence'),
           const SizedBox(height: 10),
-          _evidenceRow(context, 'Measured', finding.measuredLabel),
+          if (bytes != null)
+            ClipRRect(
+              borderRadius: BorderRadius.circular(12),
+              child: Image.memory(
+                bytes,
+                fit: BoxFit.cover,
+              ),
+            )
+          else
+            Container(
+              height: 120,
+              alignment: Alignment.center,
+              decoration: BoxDecoration(
+                color: p.glass,
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Text(
+                'No frame captured',
+                style: Theme.of(context)
+                    .textTheme
+                    .bodySmall
+                    ?.copyWith(color: p.muted),
+              ),
+            ),
+          const SizedBox(height: 8),
+          Center(
+            child: Text(
+              '${finding.timecode} · ${finding.measuredLabel} vs '
+              '${finding.limitLabel}',
+              style: AppTheme.mono(size: 11, color: p.red),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _waveformEvidence(
+    BuildContext context,
+    Finding finding,
+    ExportFile? export,
+  ) {
+    const p = AppTheme.palette;
+    final peaks = export?.waveformPeaks;
+    final isPeakDefect = finding.limitValue < 0;
+    return GlassCard(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              const Kicker('Waveform'),
+              Tag('Peak ${finding.timecode}', color: p.red),
+            ],
+          ),
+          const SizedBox(height: 10),
+          if (peaks != null && peaks.isNotEmpty)
+            WaveformView(
+              peaks: peaks,
+              height: 56,
+              peakAt: isPeakDefect ? _peakAt(finding, export) : null,
+              showLimit: isPeakDefect,
+            )
+          else
+            Container(
+              height: 56,
+              alignment: Alignment.center,
+              decoration: BoxDecoration(
+                color: p.glass,
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Text(
+                'No audio waveform',
+                style: Theme.of(context)
+                    .textTheme
+                    .bodySmall
+                    ?.copyWith(color: p.muted),
+              ),
+            ),
+          const SizedBox(height: 8),
+          Center(
+            child: Text(
+              '${finding.timecode} · ${finding.measuredLabel}',
+              style: AppTheme.mono(size: 11, color: p.red),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// The probe's frame thumbnail, decoded — null when the probe
+  /// captured no frame or the bytes do not decode.
+  Uint8List? _thumbnailBytes(ExportFile? export) {
+    final raw = export?.frameThumbnailBase64;
+    if (raw == null) return null;
+    try {
+      return base64Decode(raw);
+    } on FormatException {
+      return null;
+    }
+  }
+
+  /// Position of the finding's timecode in the export (0..1), for the
+  /// peak marker on the waveform.
+  double? _peakAt(Finding finding, ExportFile? export) {
+    final duration = export?.durationSeconds;
+    if (duration == null || duration <= 0) return null;
+    final parts = finding.timecode.split(':');
+    if (parts.length < 3) return null;
+    final seconds = (int.tryParse(parts[0]) ?? 0) * 3600 +
+        (int.tryParse(parts[1]) ?? 0) * 60 +
+        (int.tryParse(parts[2]) ?? 0);
+    return (seconds / duration).clamp(0.0, 1.0);
+  }
+
+  Widget _evidenceCard(BuildContext context, Finding finding, bool isDemo) {
+    return GlassCard(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Kicker(
+            isDemo ? 'Evidence — demo values' : 'Evidence — measured',
+          ),
+          const SizedBox(height: 10),
+          _evidenceRow(
+            context,
+            isDemo ? 'Derived' : 'Measured',
+            finding.measuredLabel,
+          ),
           _evidenceRow(context, 'Limit', finding.limitLabel),
           _evidenceRow(context, 'Timecode', finding.timecode),
           _evidenceRow(
@@ -413,6 +471,17 @@ class DefectDetailScreen extends StatelessWidget {
                   fontSize: 13,
                 ),
           ),
+          if (isDemo) ...[
+            const SizedBox(height: 8),
+            Text(
+              'Demo probe — these values were derived from the file, '
+              'not measured from its media.',
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    fontSize: 12,
+                    fontStyle: FontStyle.italic,
+                  ),
+            ),
+          ],
         ],
       ),
     );
@@ -431,35 +500,13 @@ class DefectDetailScreen extends StatelessWidget {
     );
   }
 
-  Future<void> _fix(
-    BuildContext context,
-    AppController controller,
-    Report report,
-    Finding finding,
-  ) async {
-    Report? updated;
-    try {
-      updated = await controller.applyFix(report.id, finding.id);
-    } on Object catch (_) {
-      if (!context.mounted) return;
-      showFpSnack(context, 'Could not apply the fix. Try again.');
-      return;
-    }
-    if (!context.mounted || updated == null) return;
-    Navigator.pushNamed(
-      context,
-      '/autofix',
-      arguments: {'reportId': updated.id},
-    );
-  }
-
   Future<void> _reinspect(
     BuildContext context,
     AppController controller,
     Report report,
   ) async {
-    // The inspecting screen applies the fixes to the working copy and
-    // runs with the previous report, so waivers carry forward.
+    // The inspecting screen re-runs with the previous report, so
+    // waivers carry forward.
     if (!context.mounted) return;
     Navigator.pushNamed(
       context,

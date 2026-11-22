@@ -74,6 +74,34 @@ class _DataControlsScreenState extends State<DataControlsScreen> {
               ),
             ),
             const SizedBox(height: 12),
+            if (controller.demoExportCount > 0) ...[
+              GlassCard(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Kicker('Demo data'),
+                    const SizedBox(height: 6),
+                    Text(
+                      '${controller.demoExportCount} demo export${controller.demoExportCount == 1 ? '' : 's'} '
+                      'shipped with the app, with their reports. '
+                      'Clearing them removes only demo data — your own '
+                      'exports and reports stay.',
+                      style: Theme.of(context)
+                          .textTheme
+                          .bodySmall
+                          ?.copyWith(fontSize: 13),
+                    ),
+                    const SizedBox(height: 10),
+                    FpGhostButton(
+                      label: 'Clear demo data',
+                      icon: Icons.delete_sweep_outlined,
+                      onPressed: () => _clearDemoData(context, controller),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 12),
+            ],
             GlassCard(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -178,6 +206,44 @@ class _DataControlsScreenState extends State<DataControlsScreen> {
     } finally {
       if (context.mounted) setState(() => _exporting = false);
     }
+  }
+
+  Future<void> _clearDemoData(
+    BuildContext context,
+    AppController controller,
+  ) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Clear demo data?'),
+        content: Text(
+          'This removes the ${controller.demoExportCount} demo '
+          'export${controller.demoExportCount == 1 ? '' : 's'} and their '
+          'reports. Your own exports and reports stay. This cannot be '
+          'undone.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('Clear'),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true || !context.mounted) return;
+    try {
+      await controller.clearDemoData();
+    } on Object catch (_) {
+      if (!context.mounted) return;
+      showFpSnack(context, 'Could not clear the demo data. Try again.');
+      return;
+    }
+    if (!context.mounted) return;
+    showFpSnack(context, 'Demo data cleared.');
   }
 
   Future<void> _signOut(

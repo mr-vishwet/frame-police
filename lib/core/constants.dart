@@ -1,10 +1,9 @@
 /// Canonical constants for Frame Police: the rule registry version, the
-/// CI exit-code contract, scoring weights, and the seeded demo fixture.
+/// CI exit-code contract, scoring weights, and the lifetime totals.
 ///
-/// The demo fixture is SEEDED DEMO CONTENT — labelled as demo everywhere
-/// it shows. It is the product's demo story from the V7 design (Launch
-/// Teaser v3, PR #142, 248 CI runs), not measured usage. No dates, user
-/// counts, or shipped claims are invented anywhere in the app or README.
+/// No seeded demo numbers live here: counters start at zero and only
+/// move when real inspections run. No dates, user counts, or shipped
+/// claims are invented anywhere in the app or README.
 library;
 
 /// The pinned rule registry version. Every report records the version
@@ -39,9 +38,9 @@ const int kExitError = 2;
 /// Scoring
 /// ---------------------------------------------------------------------------
 
-/// Points deducted per open defect. Two open defects score 82 — the
-/// Launch Teaser v3 demo verdict. Suggestions never affect the score,
-/// the exit code, or anything CI reads.
+/// Points deducted per open defect. Two open defects score 82.
+/// Suggestions never affect the score, the exit code, or anything CI
+/// reads.
 const int kPointsPerDefect = 9;
 
 /// Maximum score.
@@ -89,66 +88,7 @@ const String kRuleOpeningFrame = 'SUG-OPEN-01';
 /// The captions file rule code.
 const String kRuleCaptionsFile = 'SUG-CAP-01';
 
-/// ---------------------------------------------------------------------------
-/// Seeded demo fixture (labelled DEMO everywhere it shows)
-/// ---------------------------------------------------------------------------
-
-class DemoFixture {
-  /// The demo export: Launch Teaser v3, 00:47, 1080x1920, 86.4 MB.
-  static const String teaserName = 'Launch Teaser — v3.mp4';
-  /// The teaser duration in seconds.
-  static const int teaserDurationSeconds = 47;
-  /// The teaser frames.
-  static const int teaserFrames = 1128;
-  /// The teaser width.
-  static const int teaserWidth = 1080;
-  /// The teaser height.
-  static const int teaserHeight = 1920;
-  /// The teaser fps.
-  static const int teaserFps = 24;
-  /// The teaser size in bytes.
-  static const int teaserSizeBytes = 86400000;
-
-  /// The two demo defects, with their canonical evidence.
-  static const String subtitleTimecode = '00:00:12:08';
-  /// The subtitle bottom y.
-  static const double subtitleBottomY = 1066;
-  /// The subtitle limit y.
-  static const double subtitleLimitY = 1052;
-  /// The subtitle fixed y.
-  static const double subtitleFixedY = 1040;
-  /// The peak timecode.
-  static const String peakTimecode = '00:00:31:22';
-  /// The peak dbfs.
-  static const double peakDbfs = -0.8;
-  /// The peak limit dbfs.
-  static const double peakLimitDbfs = -1.0;
-  /// The peak fixed dbfs.
-  static const double peakFixedDbfs = -1.4;
-
-  /// The demo waiver reason (108 characters).
-  static const String waiverReason =
-      'Client approved the lower-third placement for this cut — '
-      'the safe area is advisory here, not a platform rule.';
-
-  /// Seeded history scores (past runs, stored records — not computed).
-  static const List<int> historyScores = [88, 91, 86, 96, 82];
-
-  /// Seeded CI totals. The recent-run list is stored alongside; counts
-  /// move when a real local run appends (e.g. the payoff run #249).
-  static const int ciTotalRuns = 248;
-  /// The ci failed runs.
-  static const int ciFailedRuns = 31;
-  /// The ci clean runs.
-  static const int ciCleanRuns = 217;
-
-  /// The demo PR at the top of the CI list.
-  static const int demoPrNumber = 142;
-  /// The demo run number.
-  static const int demoRunNumber = 248;
-
-  /// Seeded lifetime totals shown on Home and Account.
-  static const int defectsCaught = 47;
-  /// The zero defect exports.
-  static const int zeroDefectExports = 12;
-}
+/// Lifetime totals start at zero and only move when real inspections
+/// run. The demo fixture that used to live here (Launch Teaser v3,
+/// PR #142, 248 CI runs, 47 defects caught) was deleted in the
+/// real-data conversion.

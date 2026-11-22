@@ -24,6 +24,9 @@ dependencies:
   flutter_secure_storage: ^9.2.2
   # Pick export files to inspect; save report exports (native + web).
   file_picker: ^8.1.6
+  # Browser-native media probe: <video> metadata, canvas frame sampling,
+  # WebAudio decode (package:web 1.x, dart:js_interop-based bindings).
+  web: ^1.1.2
 
   material_ui: ^1.11.1
 dev_dependencies:
@@ -39,3 +42,9 @@ flutter:
     - assets/logos/horizontal.svg
     - assets/logos/stacked.svg
     - assets/logos/app-icon.svg
+    # Demo media: three real videos, probed through the real Tier A
+    # probe on first launch. Listed individually (not the whole
+    # directory) so DEMO_MEDIA.md is not bundled into the app.
+    - assets/demo/frame-police-clean-720p.mp4
+    - assets/demo/frame-police-lowres-480p.mp4
+    - assets/demo/frame-police-defective-mixed.mp4

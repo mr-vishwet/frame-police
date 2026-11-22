@@ -1,8 +1,9 @@
 /// Inspect entry — screen 02 (mobile + web).
 ///
-/// Pick an export: recent files with the selected one highlighted, the
-/// known-bad demo reel, and Browse for a new file. On web the selected
-/// export's detail sits beside the list.
+/// Pick an export: recent files with the selected one highlighted, and
+/// Browse for a new file. On web the selected export's detail sits
+/// beside the list. First launch shows an empty library with a
+/// "pick your file" prompt — no seeded exports.
 library;
 
 import 'package:material_ui/material_ui.dart';
@@ -66,53 +67,75 @@ class _InspectEntryScreenState extends State<InspectEntryScreen> {
               onChanged: (value) => setState(() => _query = value),
             ),
             const SizedBox(height: 12),
-            AdaptiveColumns(
-              left: GlassCard(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
-                child: RadioGroup<String>(
-                  groupValue: selected?.id,
-                  onChanged: (id) {
-                    for (final export in visible) {
-                      if (export.id == id) {
-                        controller.selectExport(export);
-                        break;
-                      }
-                    }
-                  },
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Kicker('Recent exports'),
-                      const SizedBox(height: 6),
-                      if (visible.isEmpty)
-                        const Padding(
-                          padding: EdgeInsets.symmetric(vertical: 12),
-                          child: Text('No exports match that search.'),
-                        ),
-                      for (final export in visible)
-                        _fileRow(context, controller, export),
-                    ],
-                  ),
-                ),
-              ),
-              right: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  if (selected != null) _detailCard(context, selected),
-                  const SizedBox(height: 12),
-                  GlassCard(
-                    child: FpRow(
+            if (controller.exports.isEmpty)
+              GlassCard(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    const FpEmptyState(
+                      icon: Icons.video_library_outlined,
+                      title: 'No exports yet',
+                      body: 'Pick your first video file and Frame Police '
+                          'will run its 14 checks on-device. Nothing '
+                          'uploads.',
+                    ),
+                    const SizedBox(height: 12),
+                    FpPrimaryButton(
+                      label: 'Pick a file',
                       icon: Icons.folder_open_outlined,
-                      title: 'Browse all files',
-                      subtitle: 'Files · Photos · iCloud Drive',
-                      trailing: const Icon(Icons.chevron_right, size: 18),
-                      onTap: () => _browse(context, controller),
+                      onPressed: () => _browse(context, controller),
+                    ),
+                  ],
+                ),
+              )
+            else
+              AdaptiveColumns(
+                left: GlassCard(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
+                  child: RadioGroup<String>(
+                    groupValue: selected?.id,
+                    onChanged: (id) {
+                      for (final export in visible) {
+                        if (export.id == id) {
+                          controller.selectExport(export);
+                          break;
+                        }
+                      }
+                    },
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Kicker('Recent exports'),
+                        const SizedBox(height: 6),
+                        if (visible.isEmpty)
+                          const Padding(
+                            padding: EdgeInsets.symmetric(vertical: 12),
+                            child: Text('No exports match that search.'),
+                          ),
+                        for (final export in visible)
+                          _fileRow(context, controller, export),
+                      ],
                     ),
                   ),
-                ],
+                ),
+                right: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    if (selected != null) _detailCard(context, selected),
+                    const SizedBox(height: 12),
+                    GlassCard(
+                      child: FpRow(
+                        icon: Icons.folder_open_outlined,
+                        title: 'Browse all files',
+                        subtitle: 'Files · Photos · iCloud Drive',
+                        trailing: const Icon(Icons.chevron_right, size: 18),
+                        onTap: () => _browse(context, controller),
+                      ),
+                    ),
+                  ],
+                ),
               ),
-            ),
             const SizedBox(height: 16),
             FpPrimaryButton(
               label: 'Continue',
@@ -145,7 +168,6 @@ class _InspectEntryScreenState extends State<InspectEntryScreen> {
     ExportFile export,
   ) {
     const p = AppTheme.palette;
-    final isKnownBad = export.id == 'exp_known_bad';
     return InkWell(
       onTap: () => controller.selectExport(export),
       borderRadius: BorderRadius.circular(12),
@@ -166,33 +188,19 @@ class _InspectEntryScreenState extends State<InspectEntryScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Row(
-                    children: [
-                      Expanded(
-                        child: Text(
-                          export.name,
-                          style: Theme.of(context)
-                              .textTheme
-                              .titleMedium
-                              ?.copyWith(fontSize: 15),
-                        ),
-                      ),
-                      if (isKnownBad) ...[
-                        const SizedBox(width: 6),
-                        Tag('Try it', color: p.orange, filled: true),
-                      ],
-                    ],
+                  Text(
+                    export.name,
+                    style: Theme.of(context)
+                        .textTheme
+                        .titleMedium
+                        ?.copyWith(fontSize: 15),
                   ),
                   const SizedBox(height: 2),
                   Text(
-                    isKnownBad
-                        ? '${formatDuration(export.durationSeconds)} · '
-                            '${export.width}×${export.height} · '
-                            '5 defects waiting'
-                        : '${formatDuration(export.durationSeconds)} · '
-                            '${export.width}×${export.height} · '
-                            '${formatBytes(export.sizeBytes)} · '
-                            '${formatRelative(export.addedAt)}',
+                    '${formatDuration(export.durationSeconds)} · '
+                    '${export.width}×${export.height} · '
+                    '${formatBytes(export.sizeBytes)} · '
+                    '${formatRelative(export.addedAt)}',
                     style: AppTheme.mono(size: 11, color: p.muted),
                   ),
                 ],
@@ -261,7 +269,9 @@ class _InspectEntryScreenState extends State<InspectEntryScreen> {
     }
     showFpSnack(
       context,
-      '${picked.name} added — demo probe, labelled in the report.',
+      picked.probe.isDemoProbe
+          ? '${picked.name} added — demo probe, labelled in the report.'
+          : '${picked.name} added — ready to inspect.',
     );
   }
 }

@@ -247,10 +247,7 @@ class _WaiverScreenState extends State<WaiverScreen> {
             ),
             const SizedBox(height: 12),
             Text(
-              'After this waiver, ${report.fixedAwaiting.length} fix'
-              '${report.fixedAwaiting.length == 1 ? ' is' : 'es are'} '
-              'applied (awaiting re-inspection). The exit code stays 1 '
-              'until re-inspection confirms it.',
+              _afterWaiverNote(report, f),
               style: Theme.of(context).textTheme.bodySmall?.copyWith(
                     fontSize: 13,
                   ),
@@ -275,6 +272,36 @@ class _WaiverScreenState extends State<WaiverScreen> {
 
   String _ruleName(AppController controller, String code) {
     return controller.ruleByCode(code)?.name ?? code;
+  }
+
+  /// What waiving this finding does to the exit code: waiving the last
+  /// blocker clears it right away; anything still open or awaiting
+  /// re-inspection keeps it at 1.
+  String _afterWaiverNote(Report report, Finding finding) {
+    final otherOpen = report.defects
+        .where(
+          (f) =>
+              f.id != finding.id &&
+              f.status == FindingStatus.open,
+        )
+        .length;
+    final fixedAwaiting = report.fixedAwaiting.length;
+    if (otherOpen == 0 && fixedAwaiting == 0) {
+      return 'After this waiver, no defect blocks the release — the '
+          'exit code becomes 0 right away. The waiver stays in the '
+          'report, with its reason.';
+    }
+    final parts = <String>[];
+    if (otherOpen > 0) {
+      parts.add('$otherOpen defect${otherOpen == 1 ? '' : 's'} '
+          'still open');
+    }
+    if (fixedAwaiting > 0) {
+      parts.add('$fixedAwaiting fix${fixedAwaiting == 1 ? '' : 'es'} '
+          'awaiting re-inspection');
+    }
+    return 'After this waiver, ${parts.join(' and ')} — the exit code '
+        'stays 1 until they are resolved.';
   }
 
   Future<void> _waive(

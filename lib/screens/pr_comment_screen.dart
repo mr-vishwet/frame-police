@@ -3,11 +3,14 @@
 /// The comment CI left: the bot's failed check, the defects, the
 /// suggestions, and the merge block. On web the comment sits beside
 /// the merge status.
+///
+/// The findings shown are the LOCAL report's — when no local report
+/// matches the run, the screen says so instead of inventing findings.
 library;
 
 import 'package:material_ui/material_ui.dart';
 
-import '../core/constants.dart';
+import '../core/format.dart';
 import '../core/responsive.dart';
 import '../core/theme.dart';
 import '../engine/models.dart';
@@ -39,7 +42,8 @@ class PrCommentScreen extends StatelessWidget {
           child: FpEmptyState(
             icon: Icons.cloud_off_outlined,
             title: 'No CI runs yet',
-            body: 'Connect the Action to see runs here.',
+            body: 'The frame-police Action isn’t published yet, so no '
+                'runs can appear here. Inspect exports locally instead.',
           ),
         ),
       );
@@ -49,12 +53,52 @@ class PrCommentScreen extends StatelessWidget {
     for (final r in controller.reports) {
       if (r.exportName == run.exportName) report = r;
     }
+    if (report == null) {
+      return FpScaffold(
+        title: 'PR #${run.prNumber}',
+        showBack: true,
+        actions: [
+          Center(
+            child: Tag(
+              run.passed ? 'Check passed' : 'Check failed',
+              color: run.passed ? p.green : p.red,
+            ),
+          ),
+        ],
+        body: FpScrollBody(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Text(
+                'Run #${run.number} · frame-police.yml · '
+                '${run.exportName}',
+                style: AppTheme.mono(size: 12, color: p.secondary),
+              ),
+              const SizedBox(height: 14),
+              const FpEmptyState(
+                icon: Icons.assignment_outlined,
+                title: 'No local report for this run',
+                body: 'The findings behind this run are not on this '
+                    'device. Inspect the export locally to see them.',
+              ),
+              const SizedBox(height: 12),
+              FpPrimaryButton(
+                label: 'Inspect an export',
+                icon: Icons.arrow_forward,
+                onPressed: () =>
+                    Navigator.pushNamed(context, '/inspect'),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
     // Final local: `report` is mutable, so its null check does not
-    // promote inside the button closure below — capture the id first.
-    final reportId = report?.id;
-    final defects = report?.defects ?? _demoDefects(run);
-    final suggestions = report?.suggestions ?? _demoSuggestions(run);
-    final score = report?.score ?? 82;
+    // promote inside the button closure below — capture it first.
+    final foundReport = report;
+    final defects = foundReport.defects;
+    final suggestions = foundReport.suggestions;
+    final score = foundReport.score;
     return FpScaffold(
       title: 'PR #${run.prNumber}',
       showBack: true,
@@ -101,7 +145,7 @@ class PrCommentScreen extends StatelessWidget {
                                     ?.copyWith(fontSize: 15),
                               ),
                               Text(
-                                'Commented just now',
+                                'Commented ${formatRelative(run.createdAt)}',
                                 style: Theme.of(context)
                                     .textTheme
                                     .bodySmall,
@@ -203,13 +247,11 @@ class PrCommentScreen extends StatelessWidget {
                       Expanded(
                         child: FpGhostButton(
                           label: 'View full report',
-                          onPressed: reportId == null
-                              ? null
-                              : () => Navigator.pushNamed(
-                                    context,
-                                    '/report',
-                                    arguments: {'reportId': reportId},
-                                  ),
+                          onPressed: () => Navigator.pushNamed(
+                            context,
+                            '/report',
+                            arguments: {'reportId': foundReport.id},
+                          ),
                         ),
                       ),
                       const SizedBox(width: 12),
@@ -218,7 +260,7 @@ class PrCommentScreen extends StatelessWidget {
                           label: 'Re-run checks',
                           onPressed: () {
                             final export = controller.exportById(
-                              report?.exportId ?? '',
+                              foundReport.exportId,
                             );
                             if (export == null) {
                               showFpSnack(
@@ -255,83 +297,5 @@ class PrCommentScreen extends StatelessWidget {
         ),
       ),
     );
-  }
-
-  /// Demo defects for seeded CI runs whose report is not stored locally.
-  List<Finding> _demoDefects(CiRun run) {
-    if (run.passed) return const [];
-    return [
-      const Finding(
-        id: kRuleSubtitleSafeArea,
-        ruleCode: kRuleSubtitleSafeArea,
-        ruleVersion: 'v1.2',
-        title: 'Subtitle sits below the safe area.',
-        kind: FindingKind.defect,
-        timecode: DemoFixture.subtitleTimecode,
-        measuredLabel: '1,066 px',
-        measuredValue: DemoFixture.subtitleBottomY,
-        limitLabel: '≤ 1,052 px',
-        limitValue: DemoFixture.subtitleLimitY,
-        detail: 'Subtitle bottom edge below the safe-area line.',
-      ),
-      const Finding(
-        id: kRuleAudioPeak,
-        ruleCode: kRuleAudioPeak,
-        ruleVersion: 'v2.0',
-        title: 'One peak, 0.2 dB over the limit.',
-        kind: FindingKind.defect,
-        timecode: DemoFixture.peakTimecode,
-        measuredLabel: '−0.8 dBFS',
-        measuredValue: DemoFixture.peakDbfs,
-        limitLabel: '−1.0 dBFS limit',
-        limitValue: DemoFixture.peakLimitDbfs,
-        detail: 'A single peak over the ceiling.',
-      ),
-    ];
-  }
-
-  List<Finding> _demoSuggestions(CiRun run) {
-    if (run.passed) return const [];
-    return [
-      const Finding(
-        id: kRuleLoudness,
-        ruleCode: kRuleLoudness,
-        ruleVersion: 'v1.0',
-        title: 'Loudness −13.2 LUFS vs −14.0 target',
-        kind: FindingKind.suggestion,
-        timecode: '00:00:00:00',
-        measuredLabel: '−13.2 LUFS',
-        measuredValue: -13.2,
-        limitLabel: '−14.0 LUFS target',
-        limitValue: -14.0,
-        detail: 'Loudness is 0.8 LUFS hot.',
-      ),
-      const Finding(
-        id: kRuleOpeningFrame,
-        ruleCode: kRuleOpeningFrame,
-        ruleVersion: 'v1.0',
-        title: 'Opening frame 62% dark',
-        kind: FindingKind.suggestion,
-        timecode: '00:00:00:00',
-        measuredLabel: '62% dark',
-        measuredValue: 0.62,
-        limitLabel: '< 50% dark',
-        limitValue: 0.5,
-        detail: 'The opening frame is the thumbnail on most players.',
-      ),
-      const Finding(
-        id: kRuleCaptionsFile,
-        ruleCode: kRuleCaptionsFile,
-        ruleVersion: 'v1.0',
-        title: 'No .srt attached',
-        kind: FindingKind.suggestion,
-        timecode: '00:00:00:00',
-        measuredLabel: 'No .srt found',
-        measuredValue: 0,
-        limitLabel: '.srt attached',
-        limitValue: 1,
-        detail: 'No captions file alongside the export.',
-      ),
-    ];
   }
 }

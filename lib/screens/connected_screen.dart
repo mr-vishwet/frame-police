@@ -1,7 +1,8 @@
 /// Connected accounts — screen 29 (mobile + web).
 ///
-/// CI, the team registry, shared waivers, and devices. Disconnect any
-/// of them — reports stay yours.
+/// CI, the team registry, waivers on record, and devices. Everything is
+/// local to this device — there is no cloud sync yet, so there is
+/// nothing to disconnect.
 library;
 
 import 'package:material_ui/material_ui.dart';
@@ -37,7 +38,8 @@ class ConnectedScreen extends StatelessWidget {
             const SizedBox(height: 8),
             Text(
               'CI, the team registry, and devices, all in one place. '
-              'Disconnect any of them — your reports stay yours.',
+              'Everything here is local to this device — there is no '
+              'cloud sync yet.',
               style: Theme.of(context)
                   .textTheme
                   .bodyMedium
@@ -71,28 +73,27 @@ class ConnectedScreen extends StatelessWidget {
                       subtitle:
                           '$kRegistryVersion · ${controller.rules.length} rules · pinned',
                       trailing: Tag(
-                        controller.isGuest ? 'Guest' : 'Synced',
+                        controller.isGuest ? 'Guest' : 'Local',
                         color: controller.isGuest ? p.muted : p.green,
                       ),
                       onTap: () =>
                           Navigator.pushNamed(context, '/registry'),
                     ),
                     const Divider(height: 8),
-                    FpToggleRow(
+                    FpRow(
                       title: 'PR comments',
-                      subtitle: 'Post the report on every run — defects '
-                          'only, by default',
-                      value: settings.prComments,
-                      onChanged: (value) => controller.updateSettings(
-                        settings.copyWith(prComments: value),
+                      subtitle: 'Coming soon — needs the published Action',
+                      trailing: Tag(
+                        'Coming soon',
+                        color: p.muted,
                       ),
                     ),
                     const Divider(height: 8),
                     FpRow(
-                      title: 'Shared waivers',
+                      title: 'Waivers on record',
                       subtitle:
                           '${controller.waiversCount} waiver${controller.waiversCount == 1 ? '' : 's'} '
-                          'on record — reason attached, never deleted',
+                          'on this device — reason attached, never deleted',
                       trailing: Text(
                         '${controller.waiversCount} waiver${controller.waiversCount == 1 ? '' : 's'}',
                         style: AppTheme.mono(size: 13),
@@ -111,31 +112,22 @@ class ConnectedScreen extends StatelessWidget {
                     FpRow(
                       title: 'This device',
                       subtitle:
-                          'Synced just now · ${controller.reports.length} reports',
+                          '${controller.reports.length} reports on this device',
                       trailing: const Tag('This device'),
                     ),
                     const Divider(height: 8),
-                    FpRow(
-                      title: 'Desktop web',
-                      subtitle:
-                          'Synced · same registry, same verdicts',
-                      trailing: TextButton(
-                        onPressed: () => showFpSnack(
-                          context,
-                          'Desktop web removed. Its local reports stay '
-                          'on that device.',
-                        ),
-                        child: Text(
-                          'Remove',
-                          style: TextStyle(color: p.red),
-                        ),
-                      ),
+                    Text(
+                      'No other devices linked. Data stays on this '
+                      'device — there is no cloud sync yet, so nothing '
+                      'to link.',
+                      style: Theme.of(context).textTheme.bodySmall,
                     ),
                     if (controller.isGuest) ...[
                       const Divider(height: 8),
                       Text(
-                        'Devices sync with an account. You are browsing '
-                        'as a guest — sign in to link devices.',
+                        'You are browsing as a guest. Signing in attaches '
+                        'a name to this device’s data — it does not sync '
+                        'it anywhere yet.',
                         style: Theme.of(context).textTheme.bodySmall,
                       ),
                     ],

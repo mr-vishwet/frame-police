@@ -1,8 +1,9 @@
 /// Migrate — screen 27 (mobile + web).
 ///
-/// Nothing lost. Every report, rule, and waiver from guest mode is now
-/// in the account — verified, item by item. Counts come from the real
-/// local store.
+/// Nothing lost. Signing in attaches a name to the local data — every
+/// report, rule, and waiver stays on this device, verified item by
+/// item. There is no cloud sync: nothing moves anywhere. Counts come
+/// from the real local store.
 library;
 
 import 'package:material_ui/material_ui.dart';
@@ -41,8 +42,8 @@ class MigrateScreen extends StatelessWidget {
             const SizedBox(height: 8),
             Text(
               moved
-                  ? 'Every report, rule, and waiver from guest mode is '
-                      'now in your account — verified, item by item.'
+                  ? 'Every report, rule, and waiver from guest mode stays '
+                      'right here, on this device — verified, item by item.'
                   : 'You chose not to move guest data in. Your local '
                       'reports stay on this device, untouched.',
               style: Theme.of(context)
@@ -60,14 +61,14 @@ class MigrateScreen extends StatelessWidget {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      const Kicker('Migration complete'),
+                      const Kicker('Account created — data stays local'),
                       Tag('Verified', color: p.green),
                     ],
                   ),
                   const SizedBox(height: 4),
                   Text(
                     moved
-                        ? '${summary.total} items moved · 0 failed · registry $kRegistryVersion pinned'
+                        ? '${summary.total} items verified · 0 failed · registry $kRegistryVersion pinned'
                         : '0 items moved · guest data kept local',
                     style: AppTheme.mono(size: 12, color: p.muted),
                   ),
@@ -109,9 +110,10 @@ class MigrateScreen extends StatelessWidget {
                   const Kicker('What changed'),
                   const SizedBox(height: 6),
                   Text(
-                    'Your local copies stay exactly where they were. The '
-                    'account now holds a synced copy — same registry, '
-                    'same verdicts, on every device.',
+                    'Your data stays on this device — signing in does '
+                    'not move it anywhere, and there is no cloud sync '
+                    'yet. Your backup is the export file in Data '
+                    'controls.',
                     style: Theme.of(context)
                         .textTheme
                         .bodySmall

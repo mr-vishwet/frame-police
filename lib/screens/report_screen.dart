@@ -192,16 +192,62 @@ class ReportScreen extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 16),
+            if (report.skippedRules.isNotEmpty) ...[
+              GlassCard(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Kicker('Not measured in this inspection'),
+                    const SizedBox(height: 6),
+                    Text(
+                      'The Tier A probe cannot measure these checks — '
+                      'they need vision (Tier B). They were skipped, '
+                      'not passed, and they do not affect the score or '
+                      'the exit code.',
+                      style: Theme.of(context).textTheme.bodySmall,
+                    ),
+                    const SizedBox(height: 8),
+                    for (final code in report.skippedRules)
+                      Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 3),
+                        child: Row(
+                          children: [
+                            Icon(
+                              Icons.remove_circle_outline,
+                              size: 16,
+                              color: p.muted,
+                            ),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: Text(
+                                controller.ruleByCode(code)?.name ?? code,
+                                style: Theme.of(context)
+                                    .textTheme
+                                    .bodyMedium,
+                              ),
+                            ),
+                            Text(
+                              code,
+                              style: AppTheme.mono(size: 11, color: p.muted),
+                            ),
+                          ],
+                        ),
+                      ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 16),
+            ],
             if (openDefects.isNotEmpty)
               Row(
                 children: [
                   Expanded(
                     child: FpPrimaryButton(
                       label: openDefects.length == 1
-                          ? 'Fix it'
-                          : 'Fix all (${openDefects.length})',
+                          ? 'How to fix'
+                          : 'How to fix all (${openDefects.length})',
                       icon: Icons.build_outlined,
-                      onPressed: () => _fixAll(context, controller, report),
+                      onPressed: () => _showFixGuidance(context, report),
                     ),
                   ),
                   const SizedBox(width: 12),
@@ -333,24 +379,14 @@ class ReportScreen extends StatelessWidget {
     return (h * 3600 + m * 60 + s).toDouble();
   }
 
-  Future<void> _fixAll(
-    BuildContext context,
-    AppController controller,
-    Report report,
-  ) async {
-    Report? updated;
-    try {
-      updated = await controller.applyAllFixes(report.id);
-    } on Object catch (_) {
-      if (!context.mounted) return;
-      showFpSnack(context, 'Could not apply the fixes. Try again.');
-      return;
-    }
-    if (!context.mounted || updated == null) return;
+  void _showFixGuidance(BuildContext context, Report report) {
+    // Guidance only: nothing is marked fixed here — fixes happen in
+    // the editor, and the finding stays open until a re-export is
+    // re-inspected.
     Navigator.pushNamed(
       context,
       '/autofix',
-      arguments: {'reportId': updated.id},
+      arguments: {'reportId': report.id},
     );
   }
 }

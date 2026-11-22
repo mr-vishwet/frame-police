@@ -1,7 +1,9 @@
 /// Report, waived — screen 11 (mobile + web).
 ///
-/// Nothing open: one fix awaiting re-inspection, one waiver retained —
-/// and exit 1 until re-inspection confirms the fix.
+/// The waiver is recorded. Waiving the last blocker clears the exit
+/// code right away (exit 0) — the waiver is the decision, and
+/// re-inspection confirms fixes separately. When a fix still awaits
+/// re-inspection, the exit code stays 1 until it is confirmed.
 library;
 
 import 'package:material_ui/material_ui.dart';
@@ -52,8 +54,23 @@ class ReportWaivedScreen extends StatelessWidget {
             const Kicker('Waiver recorded · report updated'),
             const SizedBox(height: 6),
             Text(
-              'Nothing open.\nOne fix to confirm.',
+              report.isClean
+                  ? 'Nothing open.\nExit 0 — the waiver cleared it.'
+                  : 'Nothing open.\nOne fix to confirm.',
               style: Theme.of(context).textTheme.headlineMedium,
+            ),
+            const SizedBox(height: 8),
+            Text(
+              report.isClean
+                  ? 'Waiving clears the exit code now — the waiver is the '
+                      'decision, on record with its reason. Re-inspection '
+                      'confirms fixes separately.'
+                  : 'The exit code stays 1 until re-inspection confirms '
+                      'the fix.',
+              style: Theme.of(context)
+                  .textTheme
+                  .bodyMedium
+                  ?.copyWith(color: p.faint),
             ),
             const SizedBox(height: 14),
             GlassCard(

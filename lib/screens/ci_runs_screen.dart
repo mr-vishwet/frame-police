@@ -1,8 +1,10 @@
 /// CI runs — screen 15 (mobile + web).
 ///
-/// Every merge, checked. Totals, the recent run list, and the link to
-/// the Action setup. On web the behaviour explainer sits beside the
-/// list. Runs are seeded demo data until the Action is connected.
+/// Every merge, checked — once the Action ships. The frame-police
+/// Action is NOT published yet, so this list starts empty and stays
+/// empty until it is; local re-inspections that clear the exit code
+/// append a run here. On web the behaviour explainer sits beside the
+/// list.
 library;
 
 import 'package:material_ui/material_ui.dart';
@@ -38,14 +40,7 @@ class CiRunsScreen extends StatelessWidget {
                   'CI runs',
                   style: Theme.of(context).textTheme.titleMedium,
                 ),
-                Tag(
-                  controller.settings.ciConnected
-                      ? 'GitHub Action · Connected'
-                      : 'GitHub Action',
-                  color: controller.settings.ciConnected
-                      ? p.green
-                      : null,
-                ),
+                const Tag('GitHub Action · Not published'),
               ],
             ),
             const SizedBox(height: 8),
@@ -60,8 +55,10 @@ class CiRunsScreen extends StatelessWidget {
             ),
             const SizedBox(height: 6),
             Text(
-              'The Action runs on every pull request that touches an '
-              'export. Exit 1 fails the check — nothing ships with a defect.',
+              'The frame-police Action isn’t published yet, so no runs '
+              'come from CI. When it ships, it will run on every pull '
+              'request that touches an export — exit 1 fails the check, '
+              'and nothing ships with a defect.',
               style: Theme.of(context)
                   .textTheme
                   .bodyMedium
@@ -105,6 +102,14 @@ class CiRunsScreen extends StatelessWidget {
                       children: [
                         const Kicker('Recent runs'),
                         const SizedBox(height: 6),
+                        if (controller.ciRuns.isEmpty)
+                          const FpEmptyState(
+                            icon: Icons.cloud_off_outlined,
+                            title: 'No CI runs yet',
+                            body: 'The Action isn’t published yet, so no '
+                                'runs can appear here. A re-inspection '
+                                'that clears the exit code appends a run.',
+                          ),
                         for (final run in controller.ciRuns)
                           _ciRow(context, run),
                       ],
@@ -119,7 +124,7 @@ class CiRunsScreen extends StatelessWidget {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const Kicker('How the Action behaves'),
+                        const Kicker('How the Action will behave'),
                         const SizedBox(height: 8),
                         Text(
                           '1  Runs on every PR that touches an export.\n'

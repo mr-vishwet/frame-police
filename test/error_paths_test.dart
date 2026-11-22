@@ -14,6 +14,7 @@ import 'package:frame_police/core/constants.dart';
 import 'package:frame_police/engine/inspector.dart';
 import 'package:frame_police/engine/models.dart';
 import 'package:frame_police/engine/reporter.dart';
+import 'package:frame_police/screens/autofix_screen.dart';
 import 'package:frame_police/screens/data_controls_screen.dart';
 import 'package:frame_police/screens/export_screen.dart';
 import 'package:frame_police/screens/home_screen.dart';
@@ -27,6 +28,8 @@ import 'package:frame_police/state/app_controller.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import 'test_fixtures.dart';
+
 class _ThrowingPicker extends FilePickerService {
   @override
   Future<ExportFile?> pickExport() async =>
@@ -39,8 +42,8 @@ class _CancellingPicker extends FilePickerService {
 }
 
 /// Storage that fails on write: reads still work (via the real
-/// SharedPreferences mock), so init() seeds in-memory demo state and
-/// every later save throws.
+/// SharedPreferences mock), so init() falls back to in-memory empty
+/// state and every later save throws.
 class _ThrowingStore extends LocalStore {
   @override
   Future<void> saveExports(List<ExportFile> exports) async =>
@@ -88,16 +91,21 @@ Future<AppController> _seededController({
   await controller.init();
   // Skip the welcome gate: these tests drive screens directly.
   controller.onboarded = true;
+  // Hand-built export: the tests inspect this, not seeded demo state
+  // (first launch starts empty).
+  final export = twoDefectExport();
+  controller.exports = [export];
+  controller.selectedExport = export;
   return controller;
 }
 
-/// The V7 canon report (Launch Teaser v3: 2 defects, score 82).
-Report _canonReport(AppController controller) {
-  final teaser = controller.exports.firstWhere(
-    (e) => e.id == 'exp_teaser_v3',
+/// The two-defect report (hand-built export: 2 defects, score 82).
+Report _twoDefectReport(AppController controller) {
+  final export = controller.exports.firstWhere(
+    (e) => e.id == 'exp_test_two_defect',
   );
   return Inspector.inspect(
-    file: teaser,
+    file: export,
     rules: controller.rules,
     registryVersion: kRegistryVersion,
     now: DateTime.utc(2026, 11, 21, 12),
@@ -186,7 +194,7 @@ void main() {
         controller.reports = [orphan, ...controller.reports];
         await _pumpApp(tester, controller);
         await _push(tester, '/inspecting', {
-          'exportId': 'exp_teaser_v3',
+          'exportId': 'exp_test_two_defect',
           'previousReportId': 'rep_orphan',
         });
         await tester.pump();
@@ -204,7 +212,7 @@ void main() {
         (tester) async {
       final controller = await _seededController();
       await _pumpApp(tester, controller);
-      await _push(tester, '/inspecting', {'exportId': 'exp_teaser_v3'});
+      await _push(tester, '/inspecting', {'exportId': 'exp_test_two_defect'});
       // 14 rules x 260 ms per probe, plus persistence.
       await tester.pump(const Duration(seconds: 6));
       await tester.pump();
@@ -220,7 +228,7 @@ void main() {
         (tester) async {
       final controller =
           await _seededController(exporter: _ThrowingExporter());
-      final report = _canonReport(controller);
+      final report = _twoDefectReport(controller);
       controller.reports = [report, ...controller.reports];
       controller.currentReport = report;
       await _pumpApp(tester, controller);
@@ -239,7 +247,7 @@ void main() {
     testWidgets('a failed waiver save shows an error and re-enables',
         (tester) async {
       final controller = await _seededController(store: _ThrowingStore());
-      final report = _canonReport(controller);
+      final report = _twoDefectReport(controller);
       controller.reports = [report, ...controller.reports];
       controller.currentReport = report;
       await _pumpApp(tester, controller);
@@ -305,23 +313,29 @@ void main() {
       expect(find.text('Exporting…'), findsNothing);
     });
 
-    testWidgets('a failed fix-all shows an error instead of going silent',
+    testWidgets(
+        'fix guidance opens without changing finding status',
         (tester) async {
       final controller = await _seededController(store: _ThrowingStore());
-      final report = _canonReport(controller);
+      final report = _twoDefectReport(controller);
       controller.reports = [report, ...controller.reports];
       controller.currentReport = report;
       await _pumpApp(tester, controller);
       await _push(tester, '/report', {'reportId': report.id});
-      await tester.ensureVisible(find.text('Fix all (2)'));
-      await tester.tap(find.text('Fix all (2)'));
+      await tester.ensureVisible(find.text('How to fix all (2)'));
+      await tester.tap(find.text('How to fix all (2)'));
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 100));
+      // Guidance only: the screen opens and no finding is marked fixed
+      // (fixes happen in the editor; nothing here changes state, so a
+      // throwing store cannot fail this tap either).
+      expect(find.byType(AutofixScreen), findsOneWidget);
+      final updated =
+          controller.reports.firstWhere((r) => r.id == report.id);
       expect(
-        _snackOn(ReportScreen, 'Could not apply the fixes. Try again.'),
-        findsOneWidget,
+        updated.defects.map((f) => f.status),
+        everyElement(FindingStatus.open),
       );
-      expect(find.byType(ReportScreen), findsOneWidget);
     });
   });
 }

@@ -91,13 +91,11 @@ class SuggestionsScreen extends StatelessWidget {
                   children: [
                     FpRow(
                       title: 'Suggestions in CI?',
-                      subtitle: 'Off by default. When on, they appear as '
-                          'PR comments only.',
-                      trailing: Switch(
-                        value: controller.settings.prComments,
-                        onChanged: (value) => controller.updateSettings(
-                          controller.settings.copyWith(prComments: value),
-                        ),
+                      subtitle: 'Coming soon — needs the published Action. '
+                          'When it ships, they appear as PR comments only.',
+                      trailing: Tag(
+                        'Coming soon',
+                        color: AppTheme.palette.muted,
                       ),
                     ),
                     const Divider(height: 8),

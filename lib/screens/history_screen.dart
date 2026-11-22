@@ -62,7 +62,11 @@ class HistoryScreen extends StatelessWidget {
                       children: [
                         const Kicker('Last 5 inspections'),
                         Text(
-                          average >= 85 ? 'Trend up' : 'Trend flat',
+                          scores.isEmpty
+                              ? 'No data yet'
+                              : average >= 85
+                                  ? 'Trend up'
+                                  : 'Trend flat',
                           style: AppTheme.mono(size: 12, color: p.green),
                         ),
                       ],

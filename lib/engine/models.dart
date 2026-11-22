@@ -63,6 +63,9 @@ class ExportFile {
     required this.addedAt,
     required this.probe,
     this.isDemo = false,
+    this.frameThumbnailBase64,
+    this.waveformPeaks,
+    this.fsaHandleKey,
     String? declaredAspect,
   }) : declaredAspect = declaredAspect ?? _aspectOf(width, height);
 
@@ -79,6 +82,11 @@ class ExportFile {
         addedAt: DateTime.parse(json['addedAt'] as String),
         probe: ProbeData.fromJson(json['probe'] as Map<String, dynamic>),
         isDemo: json['isDemo'] as bool? ?? false,
+        frameThumbnailBase64: json['frameThumbnailBase64'] as String?,
+        waveformPeaks: (json['waveformPeaks'] as List<dynamic>?)
+            ?.map((v) => (v as num).toDouble())
+            .toList(),
+        fsaHandleKey: json['fsaHandleKey'] as String?,
         declaredAspect: json['declaredAspect'] as String?,
       );
 
@@ -108,14 +116,63 @@ class ExportFile {
   /// to the export's own aspect when not given.
   final String declaredAspect;
 
-  /// Measured probe data the rules evaluate against. Seeded exports
-  /// carry measured values; user-picked files get a deterministic demo
-  /// probe (see `Inspector.demoProbeFor`) — labelled DEMO in the UI
-  /// until the native media probe lands in phase 2.
+  /// Measured probe data the rules evaluate against. User-picked files
+  /// carry the real Tier A probe (see `services/media_probe.dart`);
+  /// exports picked before the real probe landed carry the old
+  /// deterministic demo probe, flagged by [ProbeData.isDemoProbe] and
+  /// labelled DEMO in the UI until re-picked.
   final ProbeData probe;
 
   /// Whether this is a demo export.
   final bool isDemo;
+
+  /// Frame thumbnail from the probe: JPEG bytes as base64, ~320 px
+  /// wide. Null when the probe did not produce one (non-web, or a probe
+  /// that predates thumbnails).
+  final String? frameThumbnailBase64;
+
+  /// Waveform peaks from the probe: ~200 samples normalized 0..1.
+  /// Null when the probe did not produce one (non-web, no audio track,
+  /// or a probe that predates waveforms).
+  final List<double>? waveformPeaks;
+
+  /// Key of the persisted File System Access handle for this export
+  /// (IndexedDB, Chromium only). Lets re-inspection re-read the file
+  /// after a restart, when the session bytes cache is gone. Null for
+  /// exports picked without FSA (non-Chromium, demo media).
+  final String? fsaHandleKey;
+
+  /// Returns a copy of this with the given fields replaced. Used when
+  /// the probe fills in measured values after inspection.
+  ExportFile copyWith({
+    int? durationSeconds,
+    int? frameCount,
+    int? width,
+    int? height,
+    int? fps,
+    ProbeData? probe,
+    String? frameThumbnailBase64,
+    List<double>? waveformPeaks,
+    String? fsaHandleKey,
+  }) =>
+      ExportFile(
+        id: id,
+        name: name,
+        durationSeconds: durationSeconds ?? this.durationSeconds,
+        frameCount: frameCount ?? this.frameCount,
+        width: width ?? this.width,
+        height: height ?? this.height,
+        fps: fps ?? this.fps,
+        sizeBytes: sizeBytes,
+        addedAt: addedAt,
+        probe: probe ?? this.probe,
+        isDemo: isDemo,
+        frameThumbnailBase64:
+            frameThumbnailBase64 ?? this.frameThumbnailBase64,
+        waveformPeaks: waveformPeaks ?? this.waveformPeaks,
+        fsaHandleKey: fsaHandleKey ?? this.fsaHandleKey,
+        declaredAspect: declaredAspect,
+      );
 
   /// The aspect label.
   String get aspectLabel => _aspectOf(width, height);
@@ -128,20 +185,30 @@ class ExportFile {
   static int _gcd(int a, int b) => b == 0 ? a : _gcd(b, a % b);
 
   /// Converts this to JSON.
-  Map<String, dynamic> toJson() => {
-        'id': id,
-        'name': name,
-        'durationSeconds': durationSeconds,
-        'frameCount': frameCount,
-        'width': width,
-        'height': height,
-        'fps': fps,
-        'sizeBytes': sizeBytes,
-        'addedAt': addedAt.toIso8601String(),
-        'declaredAspect': declaredAspect,
-        'probe': probe.toJson(),
-        'isDemo': isDemo,
-      };
+  Map<String, dynamic> toJson() {
+    final json = <String, dynamic>{
+      'id': id,
+      'name': name,
+      'durationSeconds': durationSeconds,
+      'frameCount': frameCount,
+      'width': width,
+      'height': height,
+      'fps': fps,
+      'sizeBytes': sizeBytes,
+      'addedAt': addedAt.toIso8601String(),
+      'declaredAspect': declaredAspect,
+      'probe': probe.toJson(),
+      'isDemo': isDemo,
+    };
+    // Thumbnail + waveform are omitted when null so old stored exports
+    // stay small and pre-probe JSON still decodes.
+    if (frameThumbnailBase64 != null) {
+      json['frameThumbnailBase64'] = frameThumbnailBase64;
+    }
+    if (waveformPeaks != null) json['waveformPeaks'] = waveformPeaks;
+    if (fsaHandleKey != null) json['fsaHandleKey'] = fsaHandleKey;
+    return json;
+  }
 }
 
 /// Measured values from the frame / audio / text probes.
@@ -167,6 +234,7 @@ class ProbeData {
     required this.openingFrameDarkness,
     required this.captionsFileAttached,
     this.isDemoProbe = false,
+    this.unmeasured = const [],
   });
 
   /// Creates a [ProbeData] from JSON.
@@ -187,6 +255,10 @@ class ProbeData {
         openingFrameDarkness: (json['openingFrameDarkness'] as num).toDouble(),
         captionsFileAttached: json['captionsFileAttached'] as bool,
         isDemoProbe: json['isDemoProbe'] as bool? ?? false,
+        unmeasured: (json['unmeasured'] as List<dynamic>?)
+                ?.map((c) => c as String)
+                .toList() ??
+            const [],
       );
 
   /// Lowest subtitle bottom edge in px (frame height is the reference).
@@ -233,6 +305,14 @@ class ProbeData {
   /// measured media. Labelled DEMO in the report.
   final bool isDemoProbe;
 
+  /// Rule codes whose inputs this probe did not measure. The inspector
+  /// skips these rules (no finding, no pass) and records them in
+  /// [Report.skippedRules]. A Tier A probe lists the Tier B rules here
+  /// (subtitle/text/logo/sync/title need OCR/vision); an export that
+  /// has never been probed lists every rule. Empty for the old seeded
+  /// probes, which claimed full measurement.
+  final List<String> unmeasured;
+
   /// Returns a copy of this with the given fields replaced.
   ProbeData copyWith({
     double? subtitleBottomY,
@@ -247,6 +327,7 @@ class ProbeData {
     double? loudnessLufs,
     double? openingFrameDarkness,
     bool? captionsFileAttached,
+    List<String>? unmeasured,
   }) =>
       ProbeData(
         subtitleBottomY: subtitleBottomY ?? this.subtitleBottomY,
@@ -265,6 +346,7 @@ class ProbeData {
         openingFrameDarkness: openingFrameDarkness ?? this.openingFrameDarkness,
         captionsFileAttached: captionsFileAttached ?? this.captionsFileAttached,
         isDemoProbe: isDemoProbe,
+        unmeasured: unmeasured ?? this.unmeasured,
       );
 
   /// Converts this to JSON.
@@ -284,6 +366,7 @@ class ProbeData {
         'openingFrameDarkness': openingFrameDarkness,
         'captionsFileAttached': captionsFileAttached,
         'isDemoProbe': isDemoProbe,
+        'unmeasured': unmeasured,
       };
 }
 
@@ -655,6 +738,7 @@ class Report {
     required this.framesProbed,
     required this.fingerprint,
     this.demoProbe = false,
+    this.skippedRules = const [],
   });
 
   /// Creates a [Report] from JSON.
@@ -673,6 +757,10 @@ class Report {
         framesProbed: json['framesProbed'] as int,
         fingerprint: json['fingerprint'] as String,
         demoProbe: json['demoProbe'] as bool? ?? false,
+        skippedRules: (json['skippedRules'] as List<dynamic>?)
+                ?.map((c) => c as String)
+                .toList() ??
+            const [],
       );
 
   /// The id.
@@ -700,6 +788,12 @@ class Report {
   /// Whether this report came from the demo probe.
   final bool demoProbe;
 
+  /// Rule codes skipped in this inspection because the probe did not
+  /// measure their inputs (see [ProbeData.unmeasured]). Skipped rules
+  /// produce no finding and no pass — the report says so explicitly
+  /// instead of pretending they passed.
+  final List<String> skippedRules;
+
   /// The defects.
   List<Finding> get defects =>
       findings.where((f) => f.isDefect).toList();
@@ -725,6 +819,7 @@ class Report {
     int? score,
     int? exitCode,
     String? fingerprint,
+    List<String>? skippedRules,
   }) =>
       Report(
         id: id,
@@ -739,6 +834,7 @@ class Report {
         framesProbed: framesProbed,
         fingerprint: fingerprint ?? this.fingerprint,
         demoProbe: demoProbe,
+        skippedRules: skippedRules ?? this.skippedRules,
       );
 
   /// Converts this to JSON.
@@ -755,6 +851,7 @@ class Report {
         'framesProbed': framesProbed,
         'fingerprint': fingerprint,
         'demoProbe': demoProbe,
+        'skippedRules': skippedRules,
       };
 }
 
