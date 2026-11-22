@@ -112,7 +112,16 @@ class GuestModeScreen extends StatelessWidget {
             FpPrimaryButton(
               label: 'Keep going as guest',
               onPressed: () async {
-                await controller.continueAsGuest();
+                try {
+                  await controller.continueAsGuest();
+                } on Object catch (_) {
+                  if (!context.mounted) return;
+                  showFpSnack(
+                    context,
+                    'Could not continue as guest. Try again.',
+                  );
+                  return;
+                }
                 if (!context.mounted) return;
                 Navigator.pushNamedAndRemoveUntil(
                   context,

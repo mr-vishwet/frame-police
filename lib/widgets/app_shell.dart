@@ -109,27 +109,30 @@ class FpScaffold extends StatelessWidget {
             minExtendedWidth: 220,
             leading: Padding(
               padding: const EdgeInsets.fromLTRB(16, 20, 16, 24),
+              // No Expanded here: the rail measures its leading with
+              // unbounded width, and a flex child under unbounded
+              // constraints throws during layout (in release the logo
+              // lockup silently fails to lay out). The column sizes
+              // intrinsically and fits the 220 px rail.
               child: Row(
                 children: [
                   const FpLogoMark(size: 32),
                   const SizedBox(width: 10),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'FRAME POLICE',
-                          style: Theme.of(context)
-                              .textTheme
-                              .titleMedium
-                              ?.copyWith(fontSize: 14),
-                        ),
-                        Text(
-                          'Registry $kRegistryVersion',
-                          style: AppTheme.mono(size: 11, color: p.faint),
-                        ),
-                      ],
-                    ),
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'FRAME POLICE',
+                        style: Theme.of(context)
+                            .textTheme
+                            .titleMedium
+                            ?.copyWith(fontSize: 14),
+                      ),
+                      Text(
+                        'Registry $kRegistryVersion',
+                        style: AppTheme.mono(size: 11, color: p.faint),
+                      ),
+                    ],
                   ),
                 ],
               ),

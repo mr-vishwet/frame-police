@@ -203,11 +203,15 @@ class _WaiverScreenState extends State<WaiverScreen> {
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Text(
-                          '$chars characters · minimum $kMinWaiverChars',
-                          style: AppTheme.mono(
-                            size: 12,
-                            color: valid ? p.green : p.muted,
+                        // Flexed: the count wraps instead of pushing
+                        // the label off the card in the narrow column.
+                        Expanded(
+                          child: Text(
+                            '$chars characters · minimum $kMinWaiverChars',
+                            style: AppTheme.mono(
+                              size: 12,
+                              color: valid ? p.green : p.muted,
+                            ),
                           ),
                         ),
                         Text(
@@ -280,22 +284,30 @@ class _WaiverScreenState extends State<WaiverScreen> {
     Finding finding,
   ) async {
     setState(() => _saving = true);
-    final updated = await controller.waiveFinding(
-      report.id,
-      finding.id,
-      reason: _reasonController.text,
-      tag: _tag,
-    );
-    if (!context.mounted) return;
-    setState(() => _saving = false);
-    if (updated == null) {
-      showFpSnack(context, 'The reason needs at least $kMinWaiverChars characters.');
-      return;
+    try {
+      final updated = await controller.waiveFinding(
+        report.id,
+        finding.id,
+        reason: _reasonController.text,
+        tag: _tag,
+      );
+      if (!context.mounted) return;
+      if (updated == null) {
+        showFpSnack(context, 'The reason needs at least $kMinWaiverChars characters.');
+        return;
+      }
+      Navigator.pushNamed(
+        context,
+        '/report-waived',
+        arguments: {'reportId': updated.id},
+      );
+    } on Object catch (_) {
+      // Saving the waiver failed (storage unavailable): say so instead
+      // of leaving the button stuck on "Recording…".
+      if (!context.mounted) return;
+      showFpSnack(context, 'Could not record the waiver. Try again.');
+    } finally {
+      if (context.mounted) setState(() => _saving = false);
     }
-    Navigator.pushNamed(
-      context,
-      '/report-waived',
-      arguments: {'reportId': updated.id},
-    );
   }
 }

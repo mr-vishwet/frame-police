@@ -6,6 +6,48 @@ import 'package:frame_police/engine/models.dart';
 import 'package:frame_police/engine/registry.dart';
 
 void main() {
+  group('known-bad demo reel inspection', () {
+    // The Inspect screen's known-bad card previews this count
+    // ("5 defects waiting") — if the seeded probe changes, the card
+    // text in inspect_entry_screen.dart must change with it.
+    late Report report;
+
+    setUp(() {
+      final knownBad = demoExports().firstWhere(
+        (e) => e.id == 'exp_known_bad',
+      );
+      report = Inspector.inspect(
+        file: knownBad,
+        rules: defaultRules(),
+        registryVersion: kRegistryVersion,
+        now: DateTime.utc(2026, 11, 21, 12),
+      );
+    });
+
+    test('finds exactly 5 defects and 3 suggestions', () {
+      expect(report.defects.length, 5);
+      expect(report.suggestions.length, 3);
+      expect(report.findings.length, 8);
+    });
+
+    test('defect codes are the seeded five', () {
+      final codes =
+          report.defects.map((f) => f.ruleCode).toList()..sort();
+      expect(codes, [
+        kRuleAudioPeak,
+        kRuleBlackFrames,
+        kRuleBrandLogo,
+        kRuleSubtitleSafeArea,
+        kRuleTextOverflow,
+      ]);
+    });
+
+    test('score is 55 and exit code is 1', () {
+      expect(report.score, 55);
+      expect(report.exitCode, kExitDefects);
+    });
+  });
+
   group('demo teaser inspection (V7 canon)', () {
     late ExportFile teaser;
     late Report report;

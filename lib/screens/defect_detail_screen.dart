@@ -437,7 +437,14 @@ class DefectDetailScreen extends StatelessWidget {
     Report report,
     Finding finding,
   ) async {
-    final updated = await controller.applyFix(report.id, finding.id);
+    Report? updated;
+    try {
+      updated = await controller.applyFix(report.id, finding.id);
+    } on Object catch (_) {
+      if (!context.mounted) return;
+      showFpSnack(context, 'Could not apply the fix. Try again.');
+      return;
+    }
     if (!context.mounted || updated == null) return;
     Navigator.pushNamed(
       context,

@@ -338,7 +338,14 @@ class ReportScreen extends StatelessWidget {
     AppController controller,
     Report report,
   ) async {
-    final updated = await controller.applyAllFixes(report.id);
+    Report? updated;
+    try {
+      updated = await controller.applyAllFixes(report.id);
+    } on Object catch (_) {
+      if (!context.mounted) return;
+      showFpSnack(context, 'Could not apply the fixes. Try again.');
+      return;
+    }
     if (!context.mounted || updated == null) return;
     Navigator.pushNamed(
       context,

@@ -159,17 +159,25 @@ class _VerifyScreenState extends State<VerifyScreen> {
 
   Future<void> _verify(AppController controller, bool moveGuestData) async {
     setState(() => _verifying = true);
-    final error = await controller.verifyCode(_codeController.text);
-    if (!mounted) return;
-    setState(() => _verifying = false);
-    if (error != null) {
-      setState(() => _error = error);
-      return;
+    try {
+      final error = await controller.verifyCode(_codeController.text);
+      if (!mounted) return;
+      if (error != null) {
+        setState(() => _error = error);
+        return;
+      }
+      Navigator.pushNamed(
+        context,
+        '/migrate',
+        arguments: {'moveGuestData': moveGuestData},
+      );
+    } on Object catch (_) {
+      // Storing the session failed (secure storage unavailable): show
+      // it instead of leaving the button stuck on "Verifying…".
+      if (!mounted) return;
+      setState(() => _error = 'Verification failed. Try again.');
+    } finally {
+      if (mounted) setState(() => _verifying = false);
     }
-    Navigator.pushNamed(
-      context,
-      '/migrate',
-      arguments: {'moveGuestData': moveGuestData},
-    );
   }
 }

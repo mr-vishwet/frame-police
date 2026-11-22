@@ -266,14 +266,22 @@ class _ExportScreenState extends State<ExportScreen> {
     Report report,
   ) async {
     setState(() => _saving = true);
-    final path = await controller.exporter.saveReport(report, _format);
-    if (!context.mounted) return;
-    setState(() => _saving = false);
-    showFpSnack(
-      context,
-      path == null
-          ? 'Export cancelled.'
-          : 'Report saved as ${_format.label}.',
-    );
+    try {
+      final path = await controller.exporter.saveReport(report, _format);
+      if (!context.mounted) return;
+      showFpSnack(
+        context,
+        path == null
+            ? 'Export cancelled.'
+            : 'Report saved as ${_format.label}.',
+      );
+    } on Object catch (_) {
+      // The save dialog/download failed: say so instead of leaving the
+      // button stuck on "Saving…".
+      if (!context.mounted) return;
+      showFpSnack(context, 'Could not save the report. Try again.');
+    } finally {
+      if (context.mounted) setState(() => _saving = false);
+    }
   }
 }

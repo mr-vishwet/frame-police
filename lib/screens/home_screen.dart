@@ -204,7 +204,11 @@ class HomeScreen extends StatelessWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              const Kicker('Quality · last 5 inspections'),
+              // Flexed: the header sits in the narrow right column on
+              // wide screens, where the kicker + button overflow.
+              const Expanded(
+                child: Kicker('Quality · last 5 inspections'),
+              ),
               TextButton(
                 onPressed: () =>
                     Navigator.pushNamed(context, '/history'),

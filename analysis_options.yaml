@@ -1,6 +1,10 @@
 # Frame Police lint rules: the recommended Flutter set, plus the rules that
 # matter most for a linter codebase — no unused imports and no public API
 # without docs on the engine surface.
+analyzer:
+  exclude:
+    - build/**
+    - web/**
 include: package:flutter_lints/flutter.yaml
 
 linter:

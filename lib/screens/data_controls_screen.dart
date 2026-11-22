@@ -156,27 +156,41 @@ class _DataControlsScreenState extends State<DataControlsScreen> {
     AppController controller,
   ) async {
     setState(() => _exporting = true);
-    final path = await controller.exporter.saveFullExport(
-      reports: controller.reports,
-      rules: controller.rules,
-      ciRuns: controller.ciRuns,
-      exports: controller.exports,
-    );
-    if (!context.mounted) return;
-    setState(() => _exporting = false);
-    showFpSnack(
-      context,
-      path == null
-          ? 'Export cancelled.'
-          : 'Everything exported as frame-police-export.zip.',
-    );
+    try {
+      final path = await controller.exporter.saveFullExport(
+        reports: controller.reports,
+        rules: controller.rules,
+        ciRuns: controller.ciRuns,
+        exports: controller.exports,
+      );
+      if (!context.mounted) return;
+      showFpSnack(
+        context,
+        path == null
+            ? 'Export cancelled.'
+            : 'Everything exported as frame-police-export.zip.',
+      );
+    } on Object catch (_) {
+      // The save dialog/download failed: say so instead of leaving the
+      // button stuck on "Exporting…".
+      if (!context.mounted) return;
+      showFpSnack(context, 'Could not export everything. Try again.');
+    } finally {
+      if (context.mounted) setState(() => _exporting = false);
+    }
   }
 
   Future<void> _signOut(
     BuildContext context,
     AppController controller,
   ) async {
-    await controller.signOut();
+    try {
+      await controller.signOut();
+    } on Object catch (_) {
+      if (!context.mounted) return;
+      showFpSnack(context, 'Could not sign out. Try again.');
+      return;
+    }
     if (!context.mounted) return;
     Navigator.pushNamedAndRemoveUntil(context, '/home', (route) => false);
     showFpSnack(context, 'Signed out. Local reports stay on this device.');
@@ -211,7 +225,13 @@ class _DataControlsScreenState extends State<DataControlsScreen> {
       ),
     );
     if (confirmed != true || !context.mounted) return;
-    await controller.deleteAccount();
+    try {
+      await controller.deleteAccount();
+    } on Object catch (_) {
+      if (!context.mounted) return;
+      showFpSnack(context, 'Could not delete the account. Try again.');
+      return;
+    }
     if (!context.mounted) return;
     Navigator.pushNamedAndRemoveUntil(
       context,

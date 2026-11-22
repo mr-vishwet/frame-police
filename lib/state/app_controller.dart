@@ -164,6 +164,9 @@ class AppController extends ChangeNotifier {
   /// The zero defect exports.
   int zeroDefectExports = DemoFixture.zeroDefectExports;
 
+  /// The last file-picker error, if picking failed (null on cancel).
+  String? pickerError;
+
   // -- inspection runner state ------------------------------------------
 
   /// The inspection phase.
@@ -311,9 +314,20 @@ class AppController extends ChangeNotifier {
   }
 
   /// Picks a file via the system picker and adds it to the export list.
-  /// Returns null when the user cancels.
+  /// Returns null when the user cancels — or when the picker itself
+  /// fails, in which case [pickerError] holds the failure (the picker
+  /// can throw, e.g. when the browser blocks the dialog on web, and a
+  /// bare null would leave the tap silently dead).
   Future<ExportFile?> pickExportFile() async {
-    final picked = await _picker.pickExport();
+    pickerError = null;
+    ExportFile? picked;
+    try {
+      picked = await _picker.pickExport();
+    } on Object catch (e) {
+      pickerError = e.toString();
+      notifyListeners();
+      return null;
+    }
     if (picked == null) return null;
     exports = [picked, ...exports];
     selectedExport = picked;

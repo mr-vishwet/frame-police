@@ -12,6 +12,7 @@ import 'package:material_ui/material_ui.dart';
 import '../core/constants.dart';
 import '../core/format.dart';
 import '../core/theme.dart';
+import '../engine/models.dart';
 import '../state/app_controller.dart';
 import '../widgets/app_shell.dart';
 import '../widgets/fp_widgets.dart';
@@ -30,6 +31,7 @@ class _InspectingScreenState extends State<InspectingScreen> {
   Duration _elapsed = Duration.zero;
   bool _started = false;
   bool _navigated = false;
+  String? _error;
 
   @override
   void initState() {
@@ -63,18 +65,37 @@ class _InspectingScreenState extends State<InspectingScreen> {
     }
     final previous =
         reportId == null ? null : controller.reportById(reportId);
-    // A re-inspection first applies the fixes to the working copy.
-    final runTarget = previous == null
-        ? export
-        : controller.prepareReinspection(previous);
-    final report = await controller.runInspection(
-      runTarget,
-      previousReport: previous,
-    );
+    Report? report;
+    try {
+      // A re-inspection first applies the fixes to the working copy.
+      // prepareReinspection throws when the report's export is missing
+      // from the store (inconsistent persisted state), and
+      // runInspection can throw when persisting the finished report
+      // fails. Either failure must show on screen — an unhandled throw
+      // here used to leave the run stuck at 0% with a live spinner.
+      final runTarget = previous == null
+          ? export
+          : controller.prepareReinspection(previous);
+      report = await controller.runInspection(
+        runTarget,
+        previousReport: previous,
+      );
+    } on Object catch (e) {
+      if (mounted) setState(() => _error = e.toString());
+      return;
+    }
     if (!mounted) return;
     if (report == null) {
-      // Cancelled or errored: go back.
-      Navigator.pop(context);
+      if (controller.inspectionPhase == InspectionPhase.error) {
+        // Errored: show the error here instead of popping silently.
+        setState(
+          () => _error =
+              controller.inspectionError ?? 'Inspection failed.',
+        );
+      } else {
+        // Cancelled: go back.
+        Navigator.pop(context);
+      }
       return;
     }
     // A re-inspection that lands clean is the payoff; everything else
@@ -109,6 +130,29 @@ class _InspectingScreenState extends State<InspectingScreen> {
   @override
   Widget build(BuildContext context) {
     final controller = AppScope.of(context);
+    if (_error != null) {
+      return FpScaffold(
+        title: 'Inspecting',
+        showBack: true,
+        body: FpScrollBody(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              FpEmptyState(
+                icon: Icons.error_outline,
+                title: 'Inspection could not run',
+                body: _error!,
+              ),
+              const SizedBox(height: 14),
+              FpGhostButton(
+                label: 'Back',
+                onPressed: () => Navigator.pop(context),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
     final args =
         ModalRoute.of(context)?.settings.arguments as Map<String, dynamic>?;
     final exportId = args?['exportId'] as String?;

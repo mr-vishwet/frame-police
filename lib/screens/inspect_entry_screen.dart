@@ -188,7 +188,7 @@ class _InspectEntryScreenState extends State<InspectEntryScreen> {
                     isKnownBad
                         ? '${formatDuration(export.durationSeconds)} · '
                             '${export.width}×${export.height} · '
-                            '2 defects waiting'
+                            '5 defects waiting'
                         : '${formatDuration(export.durationSeconds)} · '
                             '${export.width}×${export.height} · '
                             '${formatBytes(export.sizeBytes)} · '
@@ -242,9 +242,23 @@ class _InspectEntryScreenState extends State<InspectEntryScreen> {
     BuildContext context,
     AppController controller,
   ) async {
-    final picked = await controller.pickExportFile();
+    ExportFile? picked;
+    try {
+      picked = await controller.pickExportFile();
+    } on Object catch (_) {
+      // Persisting the picked export failed: the file was picked but
+      // could not be saved, so say so instead of going silent.
+      if (!context.mounted) return;
+      showFpSnack(context, 'Could not save the picked export.');
+      return;
+    }
     if (!context.mounted) return;
-    if (picked == null) return;
+    if (picked == null) {
+      if (controller.pickerError != null) {
+        showFpSnack(context, 'Could not open the file picker.');
+      }
+      return;
+    }
     showFpSnack(
       context,
       '${picked.name} added — demo probe, labelled in the report.',

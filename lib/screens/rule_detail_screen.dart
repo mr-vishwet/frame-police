@@ -355,12 +355,18 @@ class _RuleDetailScreenState extends State<RuleDetailScreen> {
   ) async {
     final value = _selectedValue ?? rule.limitValue;
     final label = _selectedLabel ?? rule.limitLabel;
-    await controller.updateRuleLimit(
-      code: rule.code,
-      newValue: value,
-      newLabel: label,
-      note: 'Limit changed from ${rule.limitLabel} to $label.',
-    );
+    try {
+      await controller.updateRuleLimit(
+        code: rule.code,
+        newValue: value,
+        newLabel: label,
+        note: 'Limit changed from ${rule.limitLabel} to $label.',
+      );
+    } on Object catch (_) {
+      if (!context.mounted) return;
+      showFpSnack(context, 'Could not save the rule. Try again.');
+      return;
+    }
     if (!context.mounted) return;
     setState(() {
       _selectedValue = null;
